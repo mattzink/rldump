@@ -795,7 +795,8 @@ Follow gravwar's structure (Stack / Commands / Critical Patterns / Agent Rules):
 ### 13.2 `README.md`
 
 - What it is (one paragraph) + that the JSON targets a web page consumer.
-- Install: mise setup lines; or build steps.
+- Install: link to the latest GitHub release; pick the archive for one's OS/CPU.
+- Build: mise setup lines + `mise run publish`.
 - Config: file shape, search order, where to get a token
   (rocketplanet.gg account portal), gitignore note.
 - Usage examples for both commands, with the sample tidy output block and a note on

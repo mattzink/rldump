@@ -11,31 +11,32 @@ dependencies beyond the system C library.
 
 ## Commands
 
-```
+```text
 schedule    Get the current tournament schedule for a region
 regions     List the valid schedule regions
 ```
 
 ## Install
 
+Pre-built archives ship with every [GitHub release](https://github.com/mattzink/rldump/releases/latest)
+(named `rldump-<os>-<arch>-<version>.tar.zstd`). Get the one that matches your OS/CPU
+(currently `linux-x64`) and put the `rldump` binary on your `PATH`.
+
+Then copy the included `rldump.json.example` to `rldump.json` and fill in `api.token`
+— see [Configuration](#configuration).
+
+## Build
+
 The toolchain (.NET 10 SDK + the AOT C compiler) is managed by
 [mise](https://mise.jdx.dev/). From a fresh clone:
 
 ```sh
 mise trust && mise install && mise run setup   # restore packages
-mise run publish                                # -> dist/rldump
+mise run publish                               # -> dist/rldump
 ./dist/rldump --help
 ```
 
 Or run the tests: `mise run test`.
-
-## Versioning
-
-The base version is the `<Version>` in `src/rldump/rldump.csproj` (`1.0.0`); local
-builds report it verbatim. In CI the patch number is replaced with the GitHub run
-number, so every published build reports a unique version via `rldump --version`
-(e.g. `1.0.57`) and the release artifact is named after it
-(`rldump-linux-x64-1.0.57.tar.zstd`).
 
 ## Configuration
 
@@ -77,7 +78,7 @@ An example ships as [`rldump.json.example`](rldump.json.example): copy it to
 
 ## Usage
 
-```
+```text
 rldump schedule --region USW                        # tidy JSON to stdout
 rldump regions                                      # list valid regions
 rldump --raw schedule --region USW                  # verbatim API envelope
@@ -168,7 +169,7 @@ half-filled page.
 ## Exit codes
 
 | Code | Meaning |
-|---|---|
+| --- | --- |
 | 0 | success |
 | 1 | API error (`Error` envelope, or a non-2xx HTTP response) |
 | 2 | usage error (unknown command/option, missing required option) |
@@ -177,6 +178,14 @@ half-filled page.
 
 JSON always goes to **stdout** (or `-o FILE`); diagnostics always go to
 **stderr**. They are never mixed.
+
+## Versioning
+
+The base version is the `<Version>` in `src/rldump/rldump.csproj` (`1.0.0`); local
+builds report it verbatim. In CI the patch number is replaced with the GitHub run
+number, so every published build reports a unique version via `rldump --version`
+(e.g. `1.0.57`) and the release artifact is named after it
+(`rldump-linux-x64-1.0.57.tar.zstd`).
 
 ## Adding an endpoint
 
