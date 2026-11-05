@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rocket League — USW Tourneys</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 2rem auto; max-width: 64rem; padding: 0 1rem; color: #1a1a2e; }
+    h1 { border-bottom: 3px solid #e94560; padding-bottom: .4rem; }
+    h2 { margin-top: 2rem; }
+    ul#regions { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; padding: 0; }
+    ul#regions li { background: #16213e; color: #fff; border-radius: 999px; padding: .25rem .9rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid #e6e6e6; }
+    th { background: #f5f5f7; }
+    tr:hover td { background: #fafafa; }
+  </style>
+</head>
+<body>
+  <!-- The "USW" in the heading is illustrative; it tracks the script's REGION arg. -->
+  <h1>Rocket League — USW Tourneys</h1>
+
+  <section>
+    <h2>Regions</h2>
+    <ul id="regions"></ul>
+  </section>
+
+  <section>
+    <h2>Schedule</h2>
+    <table id="schedule">
+      <thead>
+        <tr><th>Start (UTC)</th><th>Tournament</th><th>Mode</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!--
+    JSON islands. build-tourneys.sh replaces each WHOLE-LINE marker below
+    (PUT_REGIONS / PUT_SCHEDULE) with the matching `rldump --compact` output,
+    verbatim. The inline script at the bottom parses these islands and renders
+    the lists/tables above. Keep each marker on its own line.
+  -->
+  <script id="island-regions" type="application/json">
+PUT_REGIONS
+  </script>
+  <script id="island-schedule" type="application/json">
+PUT_SCHEDULE
+  </script>
+
+  <script>
+    "use strict";
+    const read = (id) => JSON.parse(document.getElementById(id).textContent);
+    const regions  = read("island-regions");
+    const schedule = read("island-schedule");
+
+    // Regions: the live API returns [{ "ID": "USW", "Label": "North America" }, …];
+    // tolerate plain-string entries as well (older/fixture shape).
+    const regionList = Array.isArray(regions) ? regions : (regions.Regions ?? []);
+    const ul = document.getElementById("regions");
+    for (const r of regionList) {
+      const li = document.createElement("li");
+      li.textContent = typeof r === "string"
+        ? r
+        : `${r.ID ?? r.id ?? ""}${r.Label || r.label ? " — " + (r.Label ?? r.label) : ""}`.trim();
+      ul.appendChild(li);
+    }
+
+    // Schedule: one row per tournament across every schedule block.
+    const tbody = document.querySelector("#schedule tbody");
+    const cell = (text) => { const td = document.createElement("td"); td.textContent = text ?? ""; return td; };
+    for (const s of (schedule.schedules ?? [])) {
+      for (const t of (s.tournaments ?? [])) {
+        // gameMode is string | number by design (unknown indices stay numbers).
+        const tr = document.createElement("tr");
+        tr.append(cell(t.startTime), cell(t.title), cell(t.gameMode));
+        tbody.appendChild(tr);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -78,16 +78,19 @@ An example ships as [`rldump.json.example`](rldump.json.example): copy it to
 ## Usage
 
 ```
-rldump schedule --region USW            # tidy JSON to stdout
-rldump regions                          # list valid regions
-rldump schedule --region USW --raw      # verbatim API envelope
-rldump schedule --region USW --compact  # single-line JSON
-rldump schedule --region USW -o out.json --timeout 15
+rldump schedule --region USW                        # tidy JSON to stdout
+rldump regions                                      # list valid regions
+rldump --raw schedule --region USW                  # verbatim API envelope
+rldump --compact schedule --region USW              # single-line JSON
+rldump --compact -o out.json --timeout 15 schedule --region USW
 rldump --config /path/to/rldump.json regions
 ```
 
 Global options: `--config <PATH>`, `--raw`, `--compact`, `-o, --out <FILE>`,
-`--timeout <SECS>` (default 30), `--help`, `--version`.
+`--timeout <SECS>` (default 30), `--help`, `--version`. These are defined on the
+root command, so they must be written **before** the subcommand; subcommand
+options such as `schedule`'s `--region` come after it — e.g.
+`rldump --compact schedule --region USW`.
 
 ### Sample output
 
@@ -129,6 +132,38 @@ index is replaced with its name (`"gameMode": "Dropshot"`); an index the tool
 doesn't know (e.g. index `4`, or any future index) is kept as the raw number
 (`"gameMode": 4`). No names are invented and no data is dropped, so a consumer
 should handle both shapes.
+
+## Rendering an HTML page (JSON island)
+
+rldump's tidy output is shaped to be embedded. The repo ships a working example
+that splices the JSON into an HTML template, so a plain static page can display
+it with a few lines of vanilla JS — no build step, no framework, and **rldump
+itself stays a pure JSON emitter** (the substitution is done with stock `sed`,
+outside the binary).
+
+Files:
+
+- `examples/tourneys.html.in` — the template. Each marker sits on its own line
+  inside a `<script type="application/json">` "island".
+- `examples/build-tourneys.sh` — fetches the JSON and splices it into the
+  template, producing `examples/tourneys.html`.
+
+Run it from the repo root (so `rldump` finds `./rldump.json`):
+
+```sh
+RLDUMP=./dist/rldump ./examples/build-tourneys.sh                              # -> examples/tourneys.html (region USW)
+RLDUMP=./dist/rldump ./examples/build-tourneys.sh examples/tourneys.html.in examples/tourneys.html EU
+```
+
+(Put `rldump` on your `PATH` to drop the `RLDUMP=` prefix. The three positional
+arguments are `TEMPLATE OUT REGION`.)
+
+How it works: for each data source the script calls `rldump --compact <command>`
+and uses `sed` to replace the matching whole-line marker with that output,
+verbatim. The generated page parses the embedded islands and renders the rows.
+Adding a data source is one more `rldump` call plus one more marker. Any non-zero
+`rldump` exit aborts the script before the file is written, so you never emit a
+half-filled page.
 
 ## Exit codes
 
