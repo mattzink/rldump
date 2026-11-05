@@ -1,0 +1,4 @@
+# Test method names follow the xUnit convention Method_Scenario_ExpectedOutcome,
+# which requires underscores, so CA1707 is disabled for this project only.
+[*.cs]
+dotnet_diagnostic.CA1707.severity = none

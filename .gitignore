@@ -1,0 +1,16 @@
+## Build output
+src/*/bin/
+src/*/obj/
+tests/*/bin/
+tests/*/obj/
+dist/
+
+## Local config (may contain API tokens) — the .example is tracked
+rldump.json
+
+## IDE / editor
+.vscode/*
+*.user
+
+## Logs
+*.log

@@ -1,0 +1,6 @@
+{
+    "Error": {
+        "Message": "The schedule region 'XYZ' is not valid.",
+        "Type": "ScheduleRegionIsInvalid"
+    }
+}

@@ -1,0 +1,28 @@
+[tools]
+dotnet = "10.0.403"
+clang = "23.1.4"
+
+[tasks.setup]
+description = "Restore NuGet packages"
+run = "dotnet restore"
+sources = ["rldump.slnx"]
+
+[tasks.build]
+description = "Build all projects (Release)"
+run = "dotnet build -c Release --no-restore"
+
+[tasks.test]
+description = "Run unit tests (Microsoft.Testing.Platform)"
+run = "dotnet test --no-build -c Release"
+
+# When RLDUMP_VERSION is set (CI sets it to <major.minor>.<run-number>) the
+# published binary is stamped with it; locally it keeps the csproj <Version>.
+[tasks.publish]
+description = "Build the Native AOT executable into dist/"
+run = """
+if [ -n "${RLDUMP_VERSION:-}" ]; then
+  dotnet publish src/rldump/rldump.csproj -c Release -r linux-x64 -o dist -p:Version="$RLDUMP_VERSION"
+else
+  dotnet publish src/rldump/rldump.csproj -c Release -r linux-x64 -o dist
+fi
+"""

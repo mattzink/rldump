@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/rldump/rldump.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/rldump.Tests/rldump.Tests.csproj" />
+  </Folder>
+</Solution>

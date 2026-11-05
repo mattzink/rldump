@@ -1,0 +1,233 @@
+[
+  {
+    "GameMode Index": 0,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_Soccar.GameInfo.GameInfo_Soccar",
+    "GameMode Name": "Soccar"
+  },
+  {
+    "GameMode Index": 1,
+    "GameMode Map Set": "Basketball",
+    "GameMode Disallowed Mutators": [ "BallType" ],
+    "GameMode GameInfo Path": "GameInfo_Basketball.GameInfo.GameInfo_Basketball",
+    "GameMode Name": "Hoops"
+  },
+  {
+    "GameMode Index": 2,
+    "GameMode Map Set": "Hockey",
+    "GameMode Disallowed Mutators": [ "BallType" ],
+    "GameMode GameInfo Path": "Gameinfo_Hockey.GameInfo.Gameinfo_Hockey",
+    "GameMode Name": "Snow Day"
+  },
+  {
+    "GameMode Index": 3,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [ "Items" ],
+    "GameMode GameInfo Path": "GameInfo_Items.GameInfo.GameInfo_Items",
+    "GameMode Name": "Rumble"
+  },
+  {
+    "GameMode Index": 5,
+    "GameMode Map Set": "Breakout",
+    "GameMode Disallowed Mutators": [ "BallType" ],
+    "GameMode GameInfo Path": "GameInfo_Breakout.GameInfo.GameInfo_Breakout",
+    "GameMode Name": "Dropshot"
+  },
+  {
+    "GameMode Index": 6,
+    "GameMode Map Set": "GodBall",
+    "GameMode Disallowed Mutators": [ "BallType", "BallWeight", "Items", "BallBounciness" ],
+    "GameMode GameInfo Path": "GameInfo_GodBall.GameInfo.GameInfo_GodBall",
+    "GameMode Name": "Heatseeker"
+  },
+  {
+    "GameMode Index": 7,
+    "GameMode Map Set": "Football",
+    "GameMode Disallowed Mutators": [ "BallType", "Items", "BallWeight", "BallScale" ],
+    "GameMode GameInfo Path": "GameInfo_FootBall.GameInfo.GameInfo_FootBall",
+    "GameMode Name": "Gridiron"
+  },
+  {
+    "GameMode Index": 8,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [ "BallType", "BallWeight", "BallScale" ],
+    "GameMode GameInfo Path": "GameInfo_LTM_BeachBall.GameInfo.GameInfo_LTM_BeachBall",
+    "GameMode Name": "Beach Ball"
+  },
+  {
+    "GameMode Index": 9,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_LTM_BoomerBall.GameInfo.GameInfo_LTM_BoomerBall",
+    "GameMode Name": "Boomer Ball"
+  },
+  {
+    "GameMode Index": 10,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_LTM_AprilFool.GameInfo.GameInfo_LTM_AprilFool",
+    "GameMode Name": "Confidential_ThirdWheel_Test"
+  },
+  {
+    "GameMode Index": 11,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_LTM_Demolition.GameInfo.GameInfo_LTM_Demolition",
+    "GameMode Name": "Demolition"
+  },
+  {
+    "GameMode Index": 12,
+    "GameMode Map Set": "Breakout",
+    "GameMode Disallowed Mutators": [ "BallType" ],
+    "GameMode GameInfo Path": "GameInfo_LTM_DropshotRumble.GameInfo.GameInfo_LTM_DropshotRumble",
+    "GameMode Name": "Dropshot Rumble"
+  },
+  {
+    "GameMode Index": 13,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [ "BallType" ],
+    "GameMode GameInfo Path": "GameInfo_LTM_Eggstra.GameInfo.GameInfo_LTM_Eggstra",
+    "GameMode Name": "Eggstra Special Mode"
+  },
+  {
+    "GameMode Index": 14,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_LTM_GForce.GameInfo.GameInfo_LTM_GForce",
+    "GameMode Name": "G-Force Frenzy"
+  },
+  {
+    "GameMode Index": 15,
+    "GameMode Map Set": "Knockout",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_KnockOut.Knockout.GameInfo_KnockOut",
+    "GameMode Name": "Knockout"
+  },
+  {
+    "GameMode Index": 16,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_LTM_Moonball.GameInfo.GameInfo_LTM_Moonball",
+    "GameMode Name": "Moonball"
+  },
+  {
+    "GameMode Index": 17,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_LTM_Pinball.GameInfo.GameInfo_LTM_Pinball",
+    "GameMode Name": "Pinball"
+  },
+  {
+    "GameMode Index": 18,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_LTM_SpeedDemon.GameInfo.GameInfo_LTM_SpeedDemon",
+    "GameMode Name": "Speed Demon"
+  },
+  {
+    "GameMode Index": 19,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [ "Items" ],
+    "GameMode GameInfo Path": "GameInfo_LTM_SpikeRush.GameInfo.GameInfo_LTM_SpikeRush",
+    "GameMode Name": "Spike Rush"
+  },
+  {
+    "GameMode Index": 20,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [ "BallType" ],
+    "GameMode GameInfo Path": "GameInfo_LTM_SuperCube.GameInfo.GameInfo_LTM_SuperCube",
+    "GameMode Name": "Super Cube"
+  },
+  {
+    "GameMode Index": 21,
+    "GameMode Map Set": "TerritorySoccar",
+    "GameMode Disallowed Mutators": [ "TerritoryRules" ],
+    "GameMode GameInfo Path": "GameInfo_Territory.GameInfo.GameInfo_Territory",
+    "GameMode Name": "Split Shot"
+  },
+  {
+    "GameMode Index": 22,
+    "GameMode Map Set": "Standard",
+    "GameMode Disallowed Mutators": [ "TerritoryRules", "BallType", "BallWeight", "Items", "BallBounciness" ],
+    "GameMode GameInfo Path": "GameInfo_HeatseekerTerritory.GameInfo.GameInfo_HeatseekerTerritory",
+    "GameMode Name": "Split Shot Heatseeker"
+  },
+  {
+    "GameMode Index": 23,
+    "GameMode Map Set": "Hockey",
+    "GameMode Disallowed Mutators": [ "TerritoryRules", "BallType" ],
+    "GameMode GameInfo Path": "GameInfo_SnowDayTerritory.GameInfo.GameInfo_SnowDayTerritory",
+    "GameMode Name": "Split Shot Snow Day"
+  },
+  {
+    "GameMode Index": 24,
+    "GameMode Map Set": "NonStandard",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_Soccar.GameInfo.GameInfo_Soccar",
+    "GameMode Name": "Soccar (Non-Standard Arenas)"
+  },
+  {
+    "GameMode Index": 25,
+    "GameMode Map Set": "LabsMedley",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_Soccar.GameInfo.GameInfo_Soccar",
+    "GameMode Name": "Rocket Labs Medley"
+  },
+  {
+    "GameMode Index": 26,
+    "GameMode Map Set": "GodBallRicochet",
+    "GameMode Disallowed Mutators": [ "BallType", "BallWeight", "Items", "BallBounciness" ],
+    "GameMode GameInfo Path": "GameInfo_GodBall.GameInfo.GameInfo_GodBall",
+    "GameMode Name": "Heatseeker Ricochet"
+  },
+  {
+    "GameMode Index": 27,
+    "GameMode Map Set": null,
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_Soccar.GameInfo.GameInfo_Soccar",
+    "GameMode Name": "Pentathlon Tournament"
+  },
+  {
+    "GameMode Index": 28,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [ "CarJumps", "DodgeInputTimer" ],
+    "GameMode GameInfo Path": "GameInfo_Hops.GameInfo.GameInfo_Hops",
+    "GameMode Name": "Jump Jam"
+  },
+  {
+    "GameMode Index": 29,
+    "GameMode Map Set": "Standard",
+    "GameMode Disallowed Mutators": [ "BallWeight", "BallScale", "BallType" ],
+    "GameMode GameInfo Path": "GameInfo_MagnusFutball.GameInfo.GameInfo_MagnusFutball",
+    "GameMode Name": "Soccar Strike"
+  },
+  {
+    "GameMode Index": 30,
+    "GameMode Map Set": "Possession",
+    "GameMode Disallowed Mutators": [ "BallType", "Items", "Possession", "GoalScore", "AerialGoalScore" ],
+    "GameMode GameInfo Path": "GameInfo_Possession.GameInfo.GameInfo_Possession",
+    "GameMode Name": "Possession Rumble"
+  },
+  {
+    "GameMode Index": 31,
+    "GameMode Map Set": "SpikeDrop",
+    "GameMode Disallowed Mutators": [ "TerritoryRules", "Items" ],
+    "GameMode GameInfo Path": "GameInfo_SpikeDrop.GameInfo.GameInfo_SpikeDrop",
+    "GameMode Name": "Spike Drop"
+  },
+  {
+    "GameMode Index": 32,
+    "GameMode Map Set": "Exhibition",
+    "GameMode Disallowed Mutators": [ "BallType", "TerritoryRules", "PossessionRules", "GoalScore", "AerialGoalScore", "AssistScore", "BallWeight" ],
+    "GameMode GameInfo Path": "GameInfo_KeepUp.GameInfo.GameInfo_KeepUp",
+    "GameMode Name": "Up to No Good"
+  },
+  {
+    "GameMode Index": 33,
+    "GameMode Map Set": "Bullet",
+    "GameMode Disallowed Mutators": [],
+    "GameMode GameInfo Path": "GameInfo_BladeBall.GameInfo.GameInfo_BladeBall",
+    "GameMode Name": "Bullet Ball"
+  }
+]

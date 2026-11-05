@@ -1,0 +1,58 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build-test-publish:
+    name: Build, Test, Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v4
+
+      # Version: major.minor from the <Version> in src/rldump/rldump.csproj,
+      # patch part is the run number (gravwar-style), so every published build
+      # has a unique version.
+      - name: Compute version
+        id: version
+        run: |
+          BASE=$(sed -n 's/.*<Version>\([0-9][0-9]*\.[0-9][0-9]*\)\..*/\1/p' src/rldump/rldump.csproj)
+          echo "RLDUMP_VERSION=${BASE}.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+          echo "version=${BASE}.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      # setup (dotnet restore) must run before build, which uses --no-restore.
+      - run: mise trust
+      - run: mise install
+      - run: mise run setup
+      - run: mise run build
+      - run: mise run test
+      # The publish task stamps the binary with RLDUMP_VERSION when it is set.
+      - run: mise run publish
+
+      # Smoke-check the AOT binary: it must run standalone with no runtime and
+      # report the stamped version.
+      - run: ./dist/rldump --help
+      - run: '[ "$(./dist/rldump --version)" = "$RLDUMP_VERSION" ]'
+
+      # Ship the binary + example config as a single compressed tarball,
+      # named with the stamped version. Release artifacts are only produced
+      # for pushes to main; PRs and branch pushes verify but don't upload.
+      - name: Package release tarball
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if ! command -v zstd >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y zstd
+          fi
+          mkdir -p package
+          cp dist/rldump package/rldump
+          cp rldump.json.example package/rldump.json.example
+          tar -C package -cf - . | zstd -q -o "rldump-linux-x64-${RLDUMP_VERSION}.tar.zstd"
+
+      # archive: false → the artifact IS the tarball (not a zip wrapping it).
+      - uses: actions/upload-artifact@v7
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
+          path: rldump-linux-x64-${RLDUMP_VERSION}.tar.zstd
+          archive: false

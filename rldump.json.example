@@ -1,0 +1,6 @@
+{
+  "api": {
+    "baseUrl": "https://prime.rocketplanet.gg",
+    "token": "PASTE-YOUR-TOKEN-HERE"
+  }
+}
