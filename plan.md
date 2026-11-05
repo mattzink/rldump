@@ -255,6 +255,10 @@ xunit v3 executable test project (per xunit docs, *Microsoft Testing Platform in
     <RootNamespace>Rldump</RootNamespace>
     <!-- Version base: CI stamps the patch part with GITHUB_RUN_NUMBER (-p:Version). -->
     <Version>1.0.0</Version>
+    <!-- On CI the bundled Microsoft.Build.Tasks.Git SDK sets SourceRevisionId
+         from GITHUB_SHA, and the SDK then appends +<SourceRevisionId> to the
+         informational version; opt out so the version is exactly $(Version). -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -282,6 +286,15 @@ Notes:
   patch with the GitHub run number via `dotnet publish -p:Version=1.0.<run>` (the
   `mise run publish` task does this when `RLDUMP_VERSION` is set). Locally, `--version`
   prints the csproj value verbatim.
+- `IncludeSourceRevisionInInformationalVersion=false`: inside a git repo the SDK
+  imports `Microsoft.Build.Tasks.Git`, which sets `SourceRevisionId` (from
+  `GITHUB_SHA` on CI), and the SDK's `AddSourceRevisionToInformationalVersion`
+  target then appends `+<SourceRevisionId>` to the informational version — so on
+  CI `--version` would print e.g. `1.0.57+ef46…`, breaking the CI smoke's
+  exact-match assertion. Opting out keeps `--version` exactly the (stamped)
+  `$(Version)`. Note `AssemblyInformationalVersion` does *not* suppress this —
+  the attribute is generated from `InformationalVersion`, which the SDK never
+  reads from `AssemblyInformationalVersion`.
 - `InternalsVisibleTo rldump.Tests` lets the test project drive internal types directly
   (the CLI is an `Exe` with no public API — see §9 for the visibility rule).
 
@@ -319,8 +332,10 @@ xunit v3 4.x project shape (per the official 4.0.x template / getting-started do
   prints the *entry* assembly's informational version, which in the test host is the
   test assembly (SDK default `1.0.0`), not rldump's — so
   `CliWiringTests.Version_Exit0_PrintsVersion` asserts the shape of the output
-  (exit 0, a version-looking line) rather than its value, and the real binary's
-  version is covered by the CI smoke step instead.
+  (exit 0, a version-looking line, with an optional `+<build metadata>` suffix —
+  on CI the SDK appends `+<GITHUB_SHA>` to the test assembly, which is not
+  pinned the way the main csproj is) rather than its value, and the real
+  binary's version is covered by the CI smoke step instead.
 - An `xunit.runner.json` is optional; only add it if we need non-default runner config.
 
 ### 4.5 `.gitignore`
@@ -843,8 +858,9 @@ jobs:
   `src/rldump/rldump.csproj` (`1.0.0`); CI keeps major.minor and replaces the patch
   with `GITHUB_RUN_NUMBER`, exposing it as `RLDUMP_VERSION`. The `mise run publish`
   task passes it to `dotnet publish -p:Version=…`, so the AOT binary's
-  `--version` and the artifact name both carry `1.0.<run>`. A smoke step asserts
-  the binary reports exactly that version.
+  `--version` and the artifact name both carry exactly `1.0.<run>` (the main csproj
+  opts out of the SDK's `+<GITHUB_SHA>` informational-version suffix — §4.3). A
+  smoke step asserts the binary reports exactly that version.
 - The artifact is a real `rldump-linux-x64-<version>.tar.zstd` file (the `rldump`
   binary + `rldump.json.example`), not a zip: `archive: false` makes upload-artifact
   upload the single file verbatim and use its filename as the artifact name. `zstd`

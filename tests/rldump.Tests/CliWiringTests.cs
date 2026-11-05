@@ -65,8 +65,10 @@ public class CliWiringTests
         // System.CommandLine's default --version prints the *entry* assembly's
         // informational version. In the test host the entry assembly is the test
         // assembly (no <Version> in the test csproj — the SDK default), not
-        // rldump's, so assert the shape, not the value. The real binary's
-        // version is checked by the CI smoke step.
-        Assert.Matches(@"^\d+\.\d+\.\d+(\.\d+)?\n$", console.StdOut.ToString());
+        // rldump's, so assert the shape, not the value. The optional +metadata
+        // suffix: on CI the SDK appends +<GITHUB_SHA> (SourceRevisionId) to the
+        // test assembly's informational version — it is only suppressed in the
+        // main csproj. The real binary's version is checked by the CI smoke step.
+        Assert.Matches(@"^\d+\.\d+\.\d+(\.\d+)?(\+\S+)?\n$", console.StdOut.ToString());
     }
 }
