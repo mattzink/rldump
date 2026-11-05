@@ -848,7 +848,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           name: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
-          path: rldump-linux-x64-${RLDUMP_VERSION}.tar.zstd
+          path: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
           archive: false
 ```
 
