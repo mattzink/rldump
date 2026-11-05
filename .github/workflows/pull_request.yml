@@ -1,6 +1,11 @@
-name: CI
+name: Pull Request
 
-on: [push, pull_request]
+# PRs only: direct pushes to main are checked (and gated) by release.yml,
+# which runs the same checks before publishing — a push trigger here would
+# just double-run every job on each commit.
+on:
+  pull_request:
+    branches: [main]
 
 jobs:
   build-test-publish:
@@ -33,26 +38,3 @@ jobs:
       # report the stamped version.
       - run: ./dist/rldump --help
       - run: '[ "$(./dist/rldump --version)" = "$RLDUMP_VERSION" ]'
-
-      # Ship the binary + example config as a single compressed tarball,
-      # named with the stamped version. Release artifacts are only produced
-      # for pushes to main; PRs and branch pushes verify but don't upload.
-      - name: Package release tarball
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          if ! command -v zstd >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y zstd
-          fi
-          mkdir -p package
-          cp dist/rldump package/rldump
-          cp rldump.json.example package/rldump.json.example
-          tar -C package -cf - . | zstd -q -o "rldump-linux-x64-${RLDUMP_VERSION}.tar.zstd"
-
-      # archive: false → the artifact IS the tarball (not a zip wrapping it).
-      - uses: actions/upload-artifact@v7
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        with:
-          name: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
-          path: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
-          archive: false

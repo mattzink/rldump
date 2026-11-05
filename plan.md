@@ -24,7 +24,7 @@ self-contained **Native AOT** single-file executable. The full toolchain is mana
 | Token / config | **Config file only** (`rldump.json`; tracked example: `rldump.json.example`). Search order: `./rldump.json` → `$XDG_CONFIG_HOME/rldump.json` (default `~/.config/rldump.json`). Per-field merge, cwd wins. `--config <path>` flag overrides search entirely |
 | v1 scope | `rldump schedule --region USW` + `rldump regions` |
 | Tests | **xunit v3, 4.x line**: `xunit.v3.mtp-v2` **4.0.2** with Microsoft.Testing.Platform; fake `HttpMessageHandler` + fixtures, no network in tests |
-| CI | One GitHub Actions workflow: `actions/checkout@v7` + `jdx/mise-action@v4` (matching gravwar). Version = major.minor of the csproj `<Version>` + `GITHUB_RUN_NUMBER` as the patch (gravwar-style); build + test + AOT publish (stamped, `rldump --version` = `1.0.<run>`) + `rldump-linux-x64-<version>.tar.zstd` artifact (binary + `rldump.json.example`, `archive: false`), uploaded only on push to `main` |
+| CI | Two GitHub Actions workflows (gravwar's split): `pull_request.yml` runs the build/test/AOT-publish gate on PRs to `main`; `release.yml` runs the same gate on pushes to `main`, then packages the `rldump-linux-x64-<version>.tar.zstd` artifact (binary + `rldump.json.example`, `archive: false`) and creates a GitHub release (tag `v<version>`, tarball attached, gravwar-style commit-list notes). Version = major.minor of the csproj `<Version>` + `GITHUB_RUN_NUMBER` as the patch (gravwar-style); publish stamps the binary so `rldump --version` = `1.0.<run>`. Actions: `actions/checkout@v7` + `jdx/mise-action@v4` + `actions/upload-artifact@v7` + `softprops/action-gh-release@v3` |
 
 ### Rationale notes
 
@@ -154,7 +154,8 @@ rldump/
 ├── LICENSE                         # MIT (repo only — not part of the release tarball)
 ├── rldump.json.example           # tracked example config (copy → rldump.json, fill token)
 ├── .gitignore
-├── .github/workflows/ci.yml
+├── .github/workflows/pull_request.yml  # PRs to main: build/test/publish gate
+├── .github/workflows/release.yml       # pushes to main: gate + tarball + GitHub release
 ├── src/rldump/
 │   ├── rldump.csproj
 │   ├── Program.cs                  # entry point; builds root command, maps exit codes
@@ -197,83 +198,36 @@ rldump/
 
 ### 4.1 `mise.toml`
 
-```toml
-[tools]
-dotnet = "10.0.403"
-clang = "23.1.4"
+Pins `dotnet 10.0.403` and `clang 23.1.4` (the AOT compiler; the system only has
+gcc — keeps the toolchain hermetic). Tasks:
 
-[tasks.setup]
-description = "Restore NuGet packages"
-run = "dotnet restore"
-sources = ["rldump.slnx"]
-
-[tasks.build]
-description = "Build all projects (Release)"
-run = "dotnet build -c Release --no-restore"
-
-[tasks.test]
-description = "Run unit tests (Microsoft.Testing.Platform)"
-run = "dotnet test --no-build -c Release"
-
-# When RLDUMP_VERSION is set (CI sets it to <major.minor>.<run-number>) the
-# published binary is stamped with it; locally it keeps the csproj <Version>.
-[tasks.publish]
-description = "Build the Native AOT executable into dist/"
-run = """
-if [ -n "${RLDUMP_VERSION:-}" ]; then
-  dotnet publish src/rldump/rldump.csproj -c Release -r linux-x64 -o dist -p:Version="$RLDUMP_VERSION"
-else
-  dotnet publish src/rldump/rldump.csproj -c Release -r linux-x64 -o dist
-fi
-"""
-```
+- `setup` — `dotnet restore` (sourced on `rldump.slnx`, so it re-runs when the
+  solution changes).
+- `build` — `dotnet build -c Release --no-restore`.
+- `test` — `dotnet test --no-build -c Release` (MTP runner, per root `global.json`).
+- `publish` — `dotnet publish src/rldump/rldump.csproj -c Release -r linux-x64 -o
+  dist`; when `RLDUMP_VERSION` is set (CI sets it to `<major.minor>.<run-number>`)
+  the binary is additionally stamped with it via `-p:Version=` — locally it keeps
+  the csproj `<Version>`.
 
 First-time setup: `mise trust && mise install && mise run setup`.
 (First `mise install` pulls the .NET SDK + clang — the one slow step.)
 
 ### 4.2 `global.json` (repo root)
 
-```json
-{
-  "test": { "runner": "Microsoft.Testing.Platform" }
-}
-```
-
-Required for the .NET 10 SDK so `dotnet test` uses Microsoft.Testing.Platform for the
-xunit v3 executable test project (per xunit docs, *Microsoft Testing Platform in v3*).
+Declares the Microsoft.Testing.Platform runner so `dotnet test` drives the xunit v3
+executable test project (per xunit docs, *Microsoft Testing Platform in v3*).
 
 ### 4.3 `src/rldump/rldump.csproj`
 
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AssemblyName>rldump</AssemblyName>
-    <RootNamespace>Rldump</RootNamespace>
-    <!-- Version base: CI stamps the patch part with GITHUB_RUN_NUMBER (-p:Version). -->
-    <Version>1.0.0</Version>
-    <!-- On CI the bundled Microsoft.Build.Tasks.Git SDK sets SourceRevisionId
-         from GITHUB_SHA, and the SDK then appends +<SourceRevisionId> to the
-         informational version; opt out so the version is exactly $(Version). -->
-    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <PublishAot>true</PublishAot>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="System.CommandLine" Version="2.0.14" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Data/gamemodes.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <InternalsVisibleTo Include="rldump.Tests" />
-  </ItemGroup>
-</Project>
-```
+A plain `Microsoft.NET.Sdk` `Exe` targeting `net10.0` (assembly `rldump`, namespace
+`Rldump`, nullable + implicit usings). The properties that matter:
+`<PublishAot>true</PublishAot>` + `<InvariantGlobalization>true</InvariantGlobalization>`
+(the AOT single-file build, §1); `<Version>1.0.0</Version>` (the CI version base);
+`<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`;
+`<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>`;
+the single package reference `System.CommandLine` 2.0.14; `Data/gamemodes.json` as an
+`EmbeddedResource`; and `InternalsVisibleTo rldump.Tests`.
 
 Notes:
 
@@ -301,28 +255,9 @@ Notes:
 ### 4.4 `tests/rldump.Tests/rldump.Tests.csproj`
 
 xunit v3 4.x project shape (per the official 4.0.x template / getting-started docs):
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../../src/rldump/rldump.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Using Include="Xunit" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="xunit.v3.mtp-v2" Version="4.0.2" />
-  </ItemGroup>
-</Project>
-```
+an `Exe` on `net10.0` that project-references `src/rldump`, with
+`<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>` and the
+single package `xunit.v3.mtp-v2` 4.0.2.
 
 - Test projects are standalone executables (MTP-based); `dotnet test` runs them via the
   runner declared in the root `global.json`.
@@ -340,24 +275,9 @@ xunit v3 4.x project shape (per the official 4.0.x template / getting-started do
 
 ### 4.5 `.gitignore`
 
-```
-## Build output
-src/*/bin/
-src/*/obj/
-tests/*/bin/
-tests/*/obj/
-dist/
-
-## Local config (may contain API tokens) — the .example is tracked
-rldump.json
-
-## IDE / editor
-.vscode/*
-*.user
-
-## Logs
-*.log
-```
+Ignores build output (`src/*/bin|obj`, `tests/*/bin|obj`, `dist/`), the local
+`rldump.json` (may contain API tokens — the `.example` is tracked), IDE/editor
+files, and `*.log`.
 
 (`rldump.json` is gitignored at repo root only — the embedded
 `src/rldump/Data/gamemodes.json` and the tracked `rldump.json.example`
@@ -474,14 +394,7 @@ The config file is named `rldump.json`; a tracked, secret-free example ships as
 `rldump.json.example` (copy it to `rldump.json` — or anywhere, and point
 `--config` at it — and fill in the token).
 
-```json
-{
-  "api": {
-    "baseUrl": "https://prime.rocketplanet.gg",
-    "token": "eyJ..."
-  }
-}
-```
+Shape: one top-level `api` object holding `baseUrl` and `token`.
 
 - `api.token` — **required** (non-empty) for any command that talks to the API.
 - `api.baseUrl` — optional; default `https://prime.rocketplanet.gg`. Trailing slashes are
@@ -528,18 +441,8 @@ Tests control resolution by setting `Environment.CurrentDirectory` and
 
 ### Envelope model
 
-```csharp
-internal sealed class Envelope<TResult>
-{
-    public ApiError? Error { get; init; }
-    public TResult? Result { get; init; }
-}
-internal sealed class ApiError
-{
-    public string Message { get; init; } = "";
-    public string Type { get; init; } = "";
-}
-```
+`Envelope<TResult>` pairs an `ApiError? Error` with a `TResult? Result` (init-only,
+`internal sealed`); `ApiError` carries `Message` and `Type` strings.
 
 ---
 
@@ -686,11 +589,8 @@ Transformations (API → tidy), for reference:
 
 ### 9.3 `GameModeName` (string-or-number output type)
 
-```csharp
-internal readonly record struct GameModeName(int Index, string? Name);
-// Name null → unknown index. The JsonConverter writes Name (string) when
-// non-null, else Index (number).
-```
+`GameModeName` is an `internal readonly record struct` pairing the mode index with a
+nullable name — `Name` null means unknown index.
 
 `GameModeNameConverter` writes via `Utf8JsonWriter`: string when the name is known,
 number otherwise. Registered in `OutputJsonContext`.
@@ -788,72 +688,37 @@ real API response. Do not edit it — it is the ground truth for wire shape.
 
 ---
 
-## 12. CI — `.github/workflows/ci.yml`
+## 12. CI — `.github/workflows/pull_request.yml` + `release.yml`
 
-One job (keep it simple at v1):
+Two workflows, mirroring gravwar's split: `pull_request.yml` runs the full
+build/test/publish gate on PRs to `main`; `release.yml` runs the same gate on
+pushes to `main` and additionally packages the tarball, uploads the run
+artifact, and creates the GitHub release. Pushes to other branches run no CI —
+their PRs do (gravwar convention: a push trigger on the PR workflow would
+double-run every job on each commit to main).
 
-```yaml
-name: CI
-on: [push, pull_request]
+**`pull_request.yml`** (trigger: PRs to `main`) runs one job: `mise trust`,
+`mise install`, then the `mise run` tasks `setup` → `build` → `test` →
+`publish`, and the AOT smoke checks — `./dist/rldump --help` and asserting
+`--version` reports the stamped `RLDUMP_VERSION`. That's all: no packaging, no
+artifact, no release.
 
-jobs:
-  build-test-publish:
-    name: Build, Test, Publish
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: jdx/mise-action@v4
+**`release.yml`** (trigger: pushes to `main`) runs the same job with three
+differences: checkout uses `fetch-depth: 0` (a full clone — the release notes
+need the push's before-commit), the job declares `permissions: contents: write`
+(the release action's requirement), and a workflow-level `release` concurrency
+group queues concurrent runs instead of cancelling them (publish ordering).
+After the gate it packages `dist/rldump` + `rldump.json.example` into
+`rldump-linux-x64-<version>.tar.zstd`, uploads it as the run artifact
+(`archive: false` — the artifact is the tarball itself), writes
+`release-notes.md`, and creates the release with
+`softprops/action-gh-release@v3` — tag `v<version>`, the notes as the body,
+the tarball attached as the asset.
 
-      # Version: major.minor from the <Version> in src/rldump/rldump.csproj,
-      # patch part is the run number (gravwar-style), so every published build
-      # has a unique version.
-      - name: Compute version
-        id: version
-        run: |
-          BASE=$(sed -n 's/.*<Version>\([0-9][0-9]*\.[0-9][0-9]*\)\..*/\1/p' src/rldump/rldump.csproj)
-          echo "RLDUMP_VERSION=${BASE}.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
-          echo "version=${BASE}.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
-
-      # setup (dotnet restore) must run before build, which uses --no-restore.
-      - run: mise trust
-      - run: mise install
-      - run: mise run setup
-      - run: mise run build
-      - run: mise run test
-      # The publish task stamps the binary with RLDUMP_VERSION when it is set.
-      - run: mise run publish
-
-      # Smoke-check the AOT binary: it must run standalone with no runtime and
-      # report the stamped version.
-      - run: ./dist/rldump --help
-      - run: '[ "$(./dist/rldump --version)" = "$RLDUMP_VERSION" ]'
-
-      # Ship the binary + example config as a single compressed tarball,
-      # named with the stamped version. Release artifacts are only produced
-      # for pushes to main; PRs and branch pushes verify but don't upload.
-      - name: Package release tarball
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          if ! command -v zstd >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y zstd
-          fi
-          mkdir -p package
-          cp dist/rldump package/rldump
-          cp rldump.json.example package/rldump.json.example
-          tar -C package -cf - . | zstd -q -o "rldump-linux-x64-${RLDUMP_VERSION}.tar.zstd"
-
-      # archive: false → the artifact IS the tarball (not a zip wrapping it).
-      - uses: actions/upload-artifact@v7
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        with:
-          name: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
-          path: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
-          archive: false
-```
-
-- `jdx/mise-action@v4`, `actions/checkout@v7`, and `actions/upload-artifact@v7`
-  match gravwar's workflow conventions (upload-artifact v7.0.2, verified).
+- `jdx/mise-action@v4`, `actions/checkout@v7`, `actions/upload-artifact@v7`,
+  and `softprops/action-gh-release@v3` match gravwar's workflow conventions
+  (upload-artifact v7.0.2, verified; action-gh-release v3 is the maintained
+  line — v2.6.2 is the final v2 and runs on the deprecated Node 20 runtime).
 - **Versioning** (gravwar-style): the base is `<Version>` in
   `src/rldump/rldump.csproj` (`1.0.0`); CI keeps major.minor and replaces the patch
   with `GITHUB_RUN_NUMBER`, exposing it as `RLDUMP_VERSION`. The `mise run publish`
@@ -865,11 +730,25 @@ jobs:
   binary + `rldump.json.example`), not a zip: `archive: false` makes upload-artifact
   upload the single file verbatim and use its filename as the artifact name. `zstd`
   is preinstalled on ubuntu-latest; the install guard is just in case.
-- Packaging + upload run **only for pushes to `main`** (`if: github.event_name ==
-  'push' && github.ref == 'refs/heads/main'`); PRs and branch pushes still run the
-  full build/test/publish verification but produce no artifact. The "Compute
-  version" step stays unconditional — the version smoke assertion needs it on
-  every event.
+- **Release** (gravwar-style, `release.yml` only): `softprops/action-gh-release@v3`
+  creates a stable release tagged `v<version>` with the tarball attached via
+  `files:`. The tag is unique per run (unique version), so no release is ever
+  overwritten. Each release is also available as a run artifact under the CI run.
+- **Release notes** (gravwar's logic, adapted): GitHub's
+  `generate_release_notes` only lists merged PRs and closed issues, which is
+  useless for a project that commits directly to main — so the "Write release
+  notes" step writes `release-notes.md` itself: the archive reference with a
+  `curl` download line, plus a "Commits" section listing the commits in
+  `event.before..GITHUB_SHA` (`.before` read from `$GITHUB_EVENT_PATH` with
+  `jq`). A zero/missing `before` (branch-creating push) has no usable range and
+  lists the release commit alone (`$GITHUB_SHA~1..$GITHUB_SHA`). This is why the
+  checkout uses `fetch-depth: 0` — a shallow clone can't resolve the
+  before-commit.
+- **Publish ordering**: `concurrency: { group: release, cancel-in-progress:
+  false }` queues concurrent release runs so publishes land in commit order —
+  a stale build that finishes after a newer one must not become "Latest".
+  `permissions: contents: write` is what the release action needs (creating the
+  release + its tag); the PR workflow needs no extra permissions.
 - `mise run setup` (dotnet restore) must run before `build`, which passes
   `--no-restore` — a fresh checkout has no package cache otherwise.
 - The AOT publish on ubuntu-latest is the main cost; acceptable at v1. If it becomes slow,
@@ -944,7 +823,7 @@ Follow gravwar's structure (Stack / Commands / Critical Patterns / Agent Rules):
 5. **regions command**: model (opaque `Result` as `JsonElement`), command, tests.
 6. **AOT**: `mise run publish`; verify `dist/rldump --help/--version`; fix any
    trim/AOT findings.
-7. **Docs + CI**: `AGENTS.md`, `README.md`, `rldump.json.example`, `ci.yml`
+7. **Docs + CI**: `AGENTS.md`, `README.md`, `rldump.json.example`, `pull_request.yml` + `release.yml`
    (upload-artifact@v7 confirmed; version = csproj major.minor + run number;
    artifact = `rldump-linux-x64-<version>.tar.zstd`);
    final full pass: `mise run build && mise run test && mise run publish`.
