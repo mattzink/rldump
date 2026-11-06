@@ -178,9 +178,12 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: rldump-linux-x64.tar.zstd
+      # v8 heuristically extracts zip-typed artifacts, but this one is a
+      # direct upload (archive: false) of a raw zip, so download it as-is.
       - uses: actions/download-artifact@v8
         with:
           name: rldump-win-x64.zip
+          skip-decompress: true
       - uses: actions/download-artifact@v8
         with:
           name: release-notes.md
