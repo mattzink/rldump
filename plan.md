@@ -24,7 +24,7 @@ self-contained **Native AOT** single-file executable. The full toolchain is mana
 | Token / config | **Config file only** (`rldump.json`; tracked example: `rldump.json.example`). Search order: `./rldump.json` → `$XDG_CONFIG_HOME/rldump.json` (default `~/.config/rldump.json`). Per-field merge, cwd wins. `--config <path>` flag overrides search entirely |
 | v1 scope | `rldump schedule --region USW` + `rldump regions` |
 | Tests | **xunit v3, 4.x line**: `xunit.v3.mtp-v2` **4.0.2** with Microsoft.Testing.Platform; fake `HttpMessageHandler` + fixtures, no network in tests |
-| CI | Two GitHub Actions workflows (gravwar's split): `pull_request.yml` runs the build/test/AOT-publish gate on PRs to `main`; `release.yml` runs the same gate on pushes to `main`, then packages the `rldump-linux-x64-<version>.tar.zstd` artifact (binary + `rldump.json.example`, `archive: false`) and creates a GitHub release (tag `v<version>`, tarball attached, gravwar-style commit-list notes). Version = major.minor of the csproj `<Version>` + `GITHUB_RUN_NUMBER` as the patch (gravwar-style); publish stamps the binary so `rldump --version` = `1.0.<run>`. Actions: `actions/checkout@v7` + `jdx/mise-action@v4` + `actions/upload-artifact@v7` + `softprops/action-gh-release@v3` |
+| CI | Two GitHub Actions workflows (gravwar's split): `pull_request.yml` runs the build/test/AOT-publish gate on PRs to `main`; `release.yml` runs the same gate on pushes to `main`, then packages the `rldump-linux-x64.tar.zstd` artifact (binary + `rldump.json.example`, `archive: false`) and creates a GitHub release (tag `v<version>`, tarball attached, gravwar-style commit-list notes). Version = major.minor of the csproj `<Version>` + `GITHUB_RUN_NUMBER` as the patch (gravwar-style); publish stamps the binary so `rldump --version` = `1.0.<run>`. Actions: `actions/checkout@v7` + `jdx/mise-action@v4` + `actions/upload-artifact@v7` + `softprops/action-gh-release@v3` |
 
 ### Rationale notes
 
@@ -709,7 +709,7 @@ need the push's before-commit), the job declares `permissions: contents: write`
 (the release action's requirement), and a workflow-level `release` concurrency
 group queues concurrent runs instead of cancelling them (publish ordering).
 After the gate it packages `dist/rldump` + `rldump.json.example` into
-`rldump-linux-x64-<version>.tar.zstd`, uploads it as the run artifact
+`rldump-linux-x64.tar.zstd`, uploads it as the run artifact
 (`archive: false` — the artifact is the tarball itself), writes
 `release-notes.md`, and creates the release with
 `softprops/action-gh-release@v3` — tag `v<version>`, the notes as the body,
@@ -723,10 +723,10 @@ the tarball attached as the asset.
   `src/rldump/rldump.csproj` (`1.0.0`); CI keeps major.minor and replaces the patch
   with `GITHUB_RUN_NUMBER`, exposing it as `RLDUMP_VERSION`. The `mise run publish`
   task passes it to `dotnet publish -p:Version=…`, so the AOT binary's
-  `--version` and the artifact name both carry exactly `1.0.<run>` (the main csproj
+  `--version` carries exactly `1.0.<run>` (the main csproj
   opts out of the SDK's `+<GITHUB_SHA>` informational-version suffix — §4.3). A
   smoke step asserts the binary reports exactly that version.
-- The artifact is a real `rldump-linux-x64-<version>.tar.zstd` file (the `rldump`
+- The artifact is a real `rldump-linux-x64.tar.zstd` file (the `rldump`
   binary + `rldump.json.example`), not a zip: `archive: false` makes upload-artifact
   upload the single file verbatim and use its filename as the artifact name. `zstd`
   is preinstalled on ubuntu-latest; the install guard is just in case.
@@ -826,7 +826,7 @@ Follow gravwar's structure (Stack / Commands / Critical Patterns / Agent Rules):
    trim/AOT findings.
 7. **Docs + CI**: `AGENTS.md`, `README.md`, `rldump.json.example`, `pull_request.yml` + `release.yml`
    (upload-artifact@v7 confirmed; version = csproj major.minor + run number;
-   artifact = `rldump-linux-x64-<version>.tar.zstd`);
+   artifact = `rldump-linux-x64.tar.zstd`);
    final full pass: `mise run build && mise run test && mise run publish`.
 
 Definition of done: all tests pass via `mise run test`; `dist/rldump` builds and runs

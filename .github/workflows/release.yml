@@ -51,8 +51,8 @@ jobs:
       - run: ./dist/rldump --help
       - run: '[ "$(./dist/rldump --version)" = "$RLDUMP_VERSION" ]'
 
-      # Ship the binary + example config as a single compressed tarball,
-      # named with the stamped version.
+      # Ship the binary + example config as a single compressed tarball with
+      # a fixed name, so the `releases/latest/download/` URL never changes.
       - name: Package release tarball
         run: |
           if ! command -v zstd >/dev/null; then
@@ -62,24 +62,23 @@ jobs:
           mkdir -p package
           cp dist/rldump package/rldump
           cp rldump.json.example package/rldump.json.example
-          tar -C package -cf - . | zstd -q -o "rldump-linux-x64-${RLDUMP_VERSION}.tar.zstd"
+          tar -C package -cf - . | zstd -q -o "rldump-linux-x64.tar.zstd"
 
       # archive: false → the artifact IS the tarball (not a zip wrapping it).
       - uses: actions/upload-artifact@v7
         with:
-          name: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
-          path: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
+          name: rldump-linux-x64.tar.zstd
+          path: rldump-linux-x64.tar.zstd
           archive: false
 
       - name: Write release notes
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
         run: |
           # GitHub's generate_release_notes only lists merged PRs and closed
           # issues, which is useless for a project that commits directly to
-          # main — so this step writes the notes itself: the archive reference
-          # plus the commits in this push (event.before..GITHUB_SHA, read
-          # from the event payload JSON).
+          # main — so this step writes the notes itself: a stable
+          # `latest/download` URL (the asset name carries no version) plus
+          # the commits in this push (event.before..GITHUB_SHA, read from
+          # the event payload JSON).
           BEFORE=$(jq -r '.before // empty' "$GITHUB_EVENT_PATH")
           # event.after == GITHUB_SHA for push events. A zero/missing
           # `before` (branch-creating push) has no usable range: list the
@@ -90,10 +89,10 @@ jobs:
             RANGE="${BEFORE}..${GITHUB_SHA}"
           fi
           {
-            echo "**Archive:** \`rldump-linux-x64-${VERSION}.tar.zstd\`"
+            echo "**Archive:** \`rldump-linux-x64.tar.zstd\`"
             echo
             echo '```bash'
-            echo "curl -fsSLO \"https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/rldump-linux-x64-${VERSION}.tar.zstd\""
+            echo "curl -fsSLO \"https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/rldump-linux-x64.tar.zstd\""
             echo '```'
             echo
             echo "## Commits"
@@ -106,4 +105,4 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.version }}
           body_path: release-notes.md
-          files: rldump-linux-x64-${{ steps.version.outputs.version }}.tar.zstd
+          files: rldump-linux-x64.tar.zstd
