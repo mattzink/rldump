@@ -15,9 +15,13 @@ permissions:
   contents: write
 
 jobs:
-  build-test-publish:
-    name: Build, Test, Publish
+  linux:
+    name: Build, Test, Publish (Linux)
     runs-on: ubuntu-latest
+    outputs:
+      # Both jobs compute the version from the same formula (same run
+      # number); the release job only needs one authoritative value.
+      version: ${{ steps.version.outputs.version }}
     steps:
       # Full clone: the release-notes step needs the push's before-commit
       # (event.before) to compute the commit range.
@@ -25,7 +29,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: jdx/mise-action@v4
+      - uses: jdx/mise-action@v5
 
       # Version: major.minor from the <Version> in src/rldump/rldump.csproj,
       # patch part is the run number (gravwar-style), so every published build
@@ -76,7 +80,7 @@ jobs:
           # GitHub's generate_release_notes only lists merged PRs and closed
           # issues, which is useless for a project that commits directly to
           # main — so this step writes the notes itself: a stable
-          # `latest/download` URL (the asset name carries no version) plus
+          # `latest/download` URL (the asset names carry no version) plus
           # the commits in this push (event.before..GITHUB_SHA, read from
           # the event payload JSON).
           BEFORE=$(jq -r '.before // empty' "$GITHUB_EVENT_PATH")
@@ -89,10 +93,14 @@ jobs:
             RANGE="${BEFORE}..${GITHUB_SHA}"
           fi
           {
-            echo "**Archive:** \`rldump-linux-x64.tar.zstd\`"
+            echo "**Archives:**"
+            echo
+            echo "- \`rldump-linux-x64.tar.zstd\` (Linux)"
+            echo "- \`rldump-win-x64.zip\` (Windows)"
             echo
             echo '```bash'
             echo "curl -fsSLO \"https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/rldump-linux-x64.tar.zstd\""
+            echo "curl -fsSLO \"https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/rldump-win-x64.zip\""
             echo '```'
             echo
             echo "## Commits"
@@ -100,9 +108,90 @@ jobs:
             echo
           } > release-notes.md
 
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-notes.md
+          path: release-notes.md
+          archive: false
+
+  windows:
+    name: Build, Publish (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # No mise on this runner: setup-dotnet installs the SDK pinned in
+      # global.json (the same file mise reads on Linux; rollForward is
+      # disabled there, so the exact same SDK builds both platforms).
+      # The windows-latest image already ships the MSVC toolchain that
+      # Native AOT for win-x64 needs.
+      - uses: actions/setup-dotnet@v6
+
+      # Version: same formula as the Linux job, so both binaries report the
+      # same stamped version.
+      - name: Compute version
+        shell: bash
+        run: |
+          BASE=$(sed -n 's/.*<Version>\([0-9][0-9]*\.[0-9][0-9]*\)\..*/\1/p' src/rldump/rldump.csproj)
+          echo "RLDUMP_VERSION=${BASE}.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+
+      # No test run on Windows — the Linux job gates. The publish stamps the
+      # binary with RLDUMP_VERSION.
+      - shell: bash
+        run: |
+          dotnet restore
+          dotnet publish src/rldump/rldump.csproj -c Release -r win-x64 -o dist -p:Version="$RLDUMP_VERSION"
+
+      # Smoke-check the AOT binary: it must run standalone with no runtime and
+      # report the stamped version.
+      - shell: bash
+        run: |
+          ./dist/rldump.exe --help
+          '[ "$(./dist/rldump.exe --version)" = "$RLDUMP_VERSION" ]'
+
+      # Ship the binary + example config as a single zip with a fixed name,
+      # so the `releases/latest/download/` URL never changes.
+      # (tar -a: the Windows bsdtar picks the zip format from the extension.)
+      - name: Package release zip
+        shell: bash
+        run: |
+          mkdir -p package
+          cp dist/rldump.exe package/rldump.exe
+          cp rldump.json.example package/rldump.json.example
+          cd package
+          tar -acf ../rldump-win-x64.zip rldump.exe rldump.json.example
+
+      # archive: false → the artifact IS the zip (not a zip wrapping a zip).
+      - uses: actions/upload-artifact@v7
+        with:
+          name: rldump-win-x64.zip
+          path: rldump-win-x64.zip
+          archive: false
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [linux, windows]
+    steps:
+      # Both archives and the notes are produced by the platform jobs; this
+      # job only assembles and publishes the release.
+      - uses: actions/download-artifact@v8
+        with:
+          name: rldump-linux-x64.tar.zstd
+      - uses: actions/download-artifact@v8
+        with:
+          name: rldump-win-x64.zip
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-notes.md
+
+      # The tag is unique per run (unique version), so no release is ever
+      # overwritten.
       - name: Create release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ steps.version.outputs.version }}
+          tag_name: v${{ needs.linux.outputs.version }}
           body_path: release-notes.md
-          files: rldump-linux-x64.tar.zstd
+          files: |
+            rldump-linux-x64.tar.zstd
+            rldump-win-x64.zip

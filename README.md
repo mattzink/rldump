@@ -37,9 +37,10 @@ entries carry `playlistName` alongside the raw `playlist` index too.
 
 ## Install
 
-Pre-built archives ship with every [GitHub release](https://github.com/mattzink/rldump/releases/latest)
-(named `rldump-<os>-<arch>.tar.zstd`). Get the one that matches your OS/CPU
-(currently `linux-x64`) and put the `rldump` binary on your `PATH`.
+Pre-built archives ship with every [GitHub release](https://github.com/mattzink/rldump/releases/latest),
+named `rldump-<os>-<arch>.tar.zstd` (Linux) or `rldump-<os>-<arch>.zip` (Windows).
+Get the one that matches your OS/CPU (currently `linux-x64`, `win-x64`), extract
+it, and put the `rldump` binary on your `PATH`.
 
 Then copy the included `rldump.json.example` to `rldump.json` and fill in `api.token`
 — see [Configuration](#configuration).
@@ -47,7 +48,8 @@ Then copy the included `rldump.json.example` to `rldump.json` and fill in `api.t
 ## Build
 
 The toolchain (.NET 10 SDK + the AOT C compiler) is managed by
-[mise](https://mise.jdx.dev/). From a fresh clone:
+[mise](https://mise.jdx.dev/); the .NET SDK version is pinned in `global.json`,
+which mise picks up. From a fresh clone:
 
 ```sh
 mise trust && mise install && mise run setup   # restore packages
@@ -167,9 +169,9 @@ JSON always goes to **stdout** (or `-o FILE`); diagnostics always go to
 The base version is the `<Version>` in `src/rldump/rldump.csproj` (`1.0.0`); local
 builds report it verbatim. In CI the patch number is replaced with the GitHub run
 number, so every published build reports a unique version via `rldump --version`
-(e.g. `1.0.57`). The artifact name is fixed (`rldump-linux-x64.tar.zstd`), so
-`https://github.com/mattzink/rldump/releases/latest/download/rldump-linux-x64.tar.zstd`
-always fetches the newest release.
+(e.g. `1.0.57`). Artifact names are fixed (`rldump-linux-x64.tar.zstd`,
+`rldump-win-x64.zip`), so the `releases/latest/download/` URLs always fetch the
+newest release.
 
 ## Adding an endpoint
 

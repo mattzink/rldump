@@ -11,9 +11,11 @@ C# 14 / .NET 10. Two projects:
 - `tests/rldump.Tests` — xunit v3 (4.x) test project running on the Microsoft
   Testing Platform (MTP) runner.
 
-Toolchain is managed by [`mise.toml`](mise.toml): `dotnet 10.0.403` and
-`clang 23.1.4` (the AOT compiler). CI consumes the same config via
-`jdx/mise-action`.
+Toolchain is managed by [`mise.toml`](mise.toml): `clang 23.1.4` (the AOT
+compiler). The .NET SDK version lives in [`global.json`](global.json) — mise
+reads it via its idiomatic-version-file setting, and CI's
+`actions/setup-dotnet` reads the same file on Windows, where mise is not used.
+Linux CI consumes the mise config via `jdx/mise-action`.
 
 ## Commands
 

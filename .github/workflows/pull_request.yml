@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: jdx/mise-action@v4
+      - uses: jdx/mise-action@v5
 
       # Version: major.minor from the <Version> in src/rldump/rldump.csproj,
       # patch part is the run number (gravwar-style), so every published build

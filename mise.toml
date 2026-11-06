@@ -1,6 +1,11 @@
 [tools]
-dotnet = "10.0.403"
 clang = "23.1.4"
+
+# The .NET SDK version is pinned in global.json — the single source of truth:
+# mise reads it via the idiomatic-version-file setting below, and CI's
+# actions/setup-dotnet reads the same file on Windows (where mise is not used).
+[settings]
+idiomatic_version_file_enable_tools = ["dotnet"]
 
 [tasks.setup]
 description = "Restore NuGet packages"

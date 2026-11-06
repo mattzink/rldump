@@ -13,7 +13,7 @@ self-contained **Native AOT** single-file executable. The full toolchain is mana
 
 | Topic | Decision |
 | --- | --- |
-| Language / runtime | C# 14, .NET 10 (`net10.0`), SDK **10.0.403** installed via mise |
+| Language / runtime | C# 14, .NET 10 (`net10.0`), SDK **10.0.403** (pinned in `global.json`; installed by mise) |
 | CLI parsing | **System.CommandLine 2.0.14** (current stable NuGet package; not in the .NET 10 BCL) |
 | Executable | Native AOT: `<PublishAot>true</PublishAot>` + `<InvariantGlobalization>true</InvariantGlobalization>` → `dist/rldump` |
 | AOT C compiler | **clang 23.1.4** via mise (system only has gcc; keeps the toolchain hermetic) |
@@ -24,7 +24,7 @@ self-contained **Native AOT** single-file executable. The full toolchain is mana
 | Token / config | **Config file only** (`rldump.json`; tracked example: `rldump.json.example`). Search order: `./rldump.json` → `$XDG_CONFIG_HOME/rldump.json` (default `~/.config/rldump.json`). Per-field merge, cwd wins. `--config <path>` flag overrides search entirely |
 | v1 scope | `rldump schedule --region USW` + `rldump regions` |
 | Tests | **xunit v3, 4.x line**: `xunit.v3.mtp-v2` **4.0.2** with Microsoft.Testing.Platform; fake `HttpMessageHandler` + fixtures, no network in tests |
-| CI | Two GitHub Actions workflows (gravwar's split): `pull_request.yml` runs the build/test/AOT-publish gate on PRs to `main`; `release.yml` runs the same gate on pushes to `main`, then packages the `rldump-linux-x64.tar.zstd` artifact (binary + `rldump.json.example`, `archive: false`) and creates a GitHub release (tag `v<version>`, tarball attached, gravwar-style commit-list notes). Version = major.minor of the csproj `<Version>` + `GITHUB_RUN_NUMBER` as the patch (gravwar-style); publish stamps the binary so `rldump --version` = `1.0.<run>`. Actions: `actions/checkout@v7` + `jdx/mise-action@v4` + `actions/upload-artifact@v7` + `softprops/action-gh-release@v3` |
+| CI | Two GitHub Actions workflows (gravwar's split): `pull_request.yml` runs the build/test/AOT-publish gate on PRs to `main`; `release.yml` runs that gate on pushes to `main` in a `linux` job, builds a second AOT binary in a `windows` job on `windows-latest` (no tests — Linux gates; `actions/setup-dotnet` reads the SDK version from `global.json`, no mise), packages both as version-free artifacts (`rldump-linux-x64.tar.zstd` tarball, `rldump-win-x64.zip` zip — binary + `rldump.json.example`, `archive: false`), and a `release` job creates the GitHub release with both assets attached (tag `v<version>`, gravwar-style commit-list notes with stable `latest/download` URLs). Version = major.minor of the csproj `<Version>` + `GITHUB_RUN_NUMBER` as the patch (gravwar-style); publish stamps the binary so `rldump --version` = `1.0.<run>`. Actions (the workflows pin the current major of each): `actions/checkout` + `jdx/mise-action` + `actions/setup-dotnet` + `actions/upload-artifact` + `actions/download-artifact` + `softprops/action-gh-release` |
 
 ### Rationale notes
 
@@ -198,8 +198,10 @@ rldump/
 
 ### 4.1 `mise.toml`
 
-Pins `dotnet 10.0.403` and `clang 23.1.4` (the AOT compiler; the system only has
-gcc — keeps the toolchain hermetic). Tasks:
+Pins `clang 23.1.4` (the AOT compiler; the system only has gcc — keeps the
+toolchain hermetic). The .NET SDK version is pinned in `global.json` instead
+(`sdk.version`, `rollForward: disable`), which mise reads via
+`idiomatic_version_file_enable_tools = ["dotnet"]`. Tasks:
 
 - `setup` — `dotnet restore` (sourced on `rldump.slnx`, so it re-runs when the
   solution changes).
@@ -691,9 +693,10 @@ real API response. Do not edit it — it is the ground truth for wire shape.
 ## 12. CI — `.github/workflows/pull_request.yml` + `release.yml`
 
 Two workflows, mirroring gravwar's split: `pull_request.yml` runs the full
-build/test/publish gate on PRs to `main`; `release.yml` runs the same gate on
-pushes to `main` and additionally packages the tarball, uploads the run
-artifact, and creates the GitHub release. Pushes to other branches run no CI —
+build/test/publish gate on PRs to `main`; `release.yml` runs that gate on
+pushes to `main` (Linux job), builds a second AOT binary on Windows (no tests
+— the Linux job gates), packages both into version-free archives, and creates
+the GitHub release with both attached. Pushes to other branches run no CI —
 their PRs do (gravwar convention: a push trigger on the PR workflow would
 double-run every job on each commit to main).
 
@@ -703,42 +706,60 @@ double-run every job on each commit to main).
 `--version` reports the stamped `RLDUMP_VERSION`. That's all: no packaging, no
 artifact, no release.
 
-**`release.yml`** (trigger: pushes to `main`) runs the same job with three
-differences: checkout uses `fetch-depth: 0` (a full clone — the release notes
-need the push's before-commit), the job declares `permissions: contents: write`
-(the release action's requirement), and a workflow-level `release` concurrency
-group queues concurrent runs instead of cancelling them (publish ordering).
-After the gate it packages `dist/rldump` + `rldump.json.example` into
+**`release.yml`** (trigger: pushes to `main`) runs three jobs. The `linux` job
+is the PR gate with two additions: checkout uses `fetch-depth: 0` (a full
+clone — the release notes need the push's before-commit), and after the gate
+it packages `dist/rldump` + `rldump.json.example` into
 `rldump-linux-x64.tar.zstd`, uploads it as the run artifact
 (`archive: false` — the artifact is the tarball itself), writes
-`release-notes.md`, and creates the release with
-`softprops/action-gh-release@v3` — tag `v<version>`, the notes as the body,
-the tarball attached as the asset.
+`release-notes.md` and uploads that too. The `windows` job builds on
+`windows-latest` without mise: `actions/setup-dotnet` reads the SDK version
+from `global.json` (the same file mise uses on Linux — with `rollForward:
+disable`, both platforms build with the exact same SDK), then `dotnet restore`
++ `dotnet publish -r win-x64` (Native AOT; the image's MSVC toolchain is
+preinstalled), a smoke check, and it packages `rldump.exe` +
+`rldump.json.example` into `rldump-win-x64.zip` (Windows bsdtar's `-a` flag
+picks the zip format from the extension) and uploads it the same way. No test
+run on Windows — the Linux job gates. The `release` job (needs both) downloads
+the two archives + the notes and creates the release with
+`softprops/action-gh-release` — tag `v<version>` (the linux job's output),
+the notes as the body, both archives attached. A workflow-level `release`
+concurrency group queues concurrent runs instead of cancelling them (publish
+ordering), and the workflow declares `permissions: contents: write` (the
+release action's requirement).
 
-- `jdx/mise-action@v4`, `actions/checkout@v7`, `actions/upload-artifact@v7`,
-  and `softprops/action-gh-release@v3` match gravwar's workflow conventions
-  (upload-artifact v7.0.2, verified; action-gh-release v3 is the maintained
-  line — v2.6.2 is the final v2 and runs on the deprecated Node 20 runtime).
+- `jdx/mise-action`, `actions/checkout`, `actions/upload-artifact`,
+  `actions/setup-dotnet` (Windows job only — it reads the SDK version from
+  `global.json`, so no mise on that runner), and
+  `softprops/action-gh-release` match gravwar's workflow conventions; the
+  workflows pin the current major of each (action-gh-release v3 is the
+  maintained line — v2.6.2 is the final v2 and runs on the deprecated Node 20
+  runtime).
 - **Versioning** (gravwar-style): the base is `<Version>` in
   `src/rldump/rldump.csproj` (`1.0.0`); CI keeps major.minor and replaces the patch
   with `GITHUB_RUN_NUMBER`, exposing it as `RLDUMP_VERSION`. The `mise run publish`
-  task passes it to `dotnet publish -p:Version=…`, so the AOT binary's
+  task passes it to `dotnet publish -p:Version=…` (the Windows job publishes
+  directly with the same flag), so the AOT binary's
   `--version` carries exactly `1.0.<run>` (the main csproj
   opts out of the SDK's `+<GITHUB_SHA>` informational-version suffix — §4.3). A
-  smoke step asserts the binary reports exactly that version.
-- The artifact is a real `rldump-linux-x64.tar.zstd` file (the `rldump`
-  binary + `rldump.json.example`), not a zip: `archive: false` makes upload-artifact
-  upload the single file verbatim and use its filename as the artifact name. `zstd`
-  is preinstalled on ubuntu-latest; the install guard is just in case.
-- **Release** (gravwar-style, `release.yml` only): `softprops/action-gh-release@v3`
-  creates a stable release tagged `v<version>` with the tarball attached via
-  `files:`. The tag is unique per run (unique version), so no release is ever
-  overwritten. Each release is also available as a run artifact under the CI run.
+  smoke step in each platform job asserts the binary reports exactly that version.
+- Each artifact is a real archive file — `rldump-linux-x64.tar.zstd` (the
+  `rldump` binary + `rldump.json.example`) on Linux, `rldump-win-x64.zip`
+  (`rldump.exe` + the same config) on Windows: `archive: false` makes
+  upload-artifact upload the single file verbatim and use its filename as the
+  artifact name. `zstd` is preinstalled on ubuntu-latest; the install guard is
+  just in case.
+- **Release** (gravwar-style, `release.yml` only): the `release` job
+  (`softprops/action-gh-release`) creates a stable release tagged
+  `v<version>` with both archives attached via `files:`. The tag is unique per
+  run (unique version), so no release is ever overwritten. Each archive is
+  also available as a run artifact under the CI run.
 - **Release notes** (gravwar's logic, adapted): GitHub's
   `generate_release_notes` only lists merged PRs and closed issues, which is
   useless for a project that commits directly to main — so the "Write release
-  notes" step writes `release-notes.md` itself: the archive reference with a
-  `curl` download line, plus a "Commits" section listing the commits in
+  notes" step writes `release-notes.md` itself: the archive list with
+  `curl` download lines (stable `latest/download` URLs — the asset names
+  carry no version), plus a "Commits" section listing the commits in
   `event.before..GITHUB_SHA` (`.before` read from `$GITHUB_EVENT_PATH` with
   `jq`). A zero/missing `before` (branch-creating push) has no usable range and
   lists the release commit alone (`$GITHUB_SHA~1..$GITHUB_SHA`). This is why the
@@ -751,8 +772,9 @@ the tarball attached as the asset.
   release + its tag); the PR workflow needs no extra permissions.
 - `mise run setup` (dotnet restore) must run before `build`, which passes
   `--no-restore` — a fresh checkout has no package cache otherwise.
-- The AOT publish on ubuntu-latest is the main cost; acceptable at v1. If it becomes slow,
-  split publish into its own job later — not now.
+- The AOT publish is the main cost on each platform; the two platform jobs
+  run in parallel, so the wall-clock cost is roughly one AOT build plus the
+  fast release job.
 
 ---
 
@@ -763,7 +785,7 @@ the tarball attached as the asset.
 Follow gravwar's structure (Stack / Commands / Critical Patterns / Agent Rules):
 
 - **Stack**: C# 14 / .NET 10 single CLI + xunit v3 (4.x, MTP) test project; toolchain via
-  mise (`dotnet 10.0.403`, `clang 23.1.4`).
+  mise (`clang 23.1.4`; the .NET SDK is pinned in `global.json`).
 - **Commands**: `mise trust && mise install && mise run setup` first time;
   `mise run build|test|publish`.
 - **Critical patterns**:
@@ -825,7 +847,7 @@ Follow gravwar's structure (Stack / Commands / Critical Patterns / Agent Rules):
 6. **AOT**: `mise run publish`; verify `dist/rldump --help/--version`; fix any
    trim/AOT findings.
 7. **Docs + CI**: `AGENTS.md`, `README.md`, `rldump.json.example`, `pull_request.yml` + `release.yml`
-   (upload-artifact@v7 confirmed; version = csproj major.minor + run number;
+   (artifact upload action confirmed; version = csproj major.minor + run number;
    artifact = `rldump-linux-x64.tar.zstd`);
    final full pass: `mise run build && mise run test && mise run publish`.
 
