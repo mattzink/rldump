@@ -147,7 +147,7 @@ jobs:
       - shell: bash
         run: |
           ./dist/rldump.exe --help
-          '[ "$(./dist/rldump.exe --version)" = "$RLDUMP_VERSION" ]'
+          [ "$(./dist/rldump.exe --version)" = "$RLDUMP_VERSION" ]
 
       # Ship the binary + example config as a single zip with a fixed name,
       # so the `releases/latest/download/` URL never changes.
