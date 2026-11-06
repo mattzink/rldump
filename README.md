@@ -60,7 +60,7 @@ Or run the tests: `mise run test`.
 
 ### Where to get a token
 
-A token is issued from your [rocketplanet.gg](https://rocketplanet.gg) account
+A token is issued from your [prime.rocketplanet.gg](https://prime.rocketplanet.gg/access) account
 portal. Paste it into `api.token`.
 
 ### Search order and merge
