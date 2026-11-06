@@ -5,9 +5,11 @@ using System.Text.Json.Serialization;
 namespace Rldump.Output;
 
 /// <summary>
-/// The game-mode index → name mapping extracted from the game binary
-/// (src/rldump/Data/gamemodes.json, embedded as a resource and rebuilt when
-/// the game ships a new mapping). Loaded once at startup.
+/// The game-mode index → name mapping, embedded data extracted from the game
+/// binary (src/rldump/Data/gamemodes.json, embedded as a resource). The
+/// current data covers indices 0–3 and 5–33 (index 4 is absent, so it maps
+/// to "Unknown" in the output). When the game ships a new build with a new
+/// mapping, replace that file and rebuild. Loaded once at startup.
 /// </summary>
 internal sealed class GameModeMap
 {

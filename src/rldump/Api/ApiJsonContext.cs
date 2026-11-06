@@ -13,6 +13,13 @@ namespace Rldump.Api;
 [JsonSerializable(typeof(GetScheduleRequest))]
 [JsonSerializable(typeof(Envelope<GetScheduleResult>))]
 [JsonSerializable(typeof(GetScheduleRegionsRequest))]
+[JsonSerializable(typeof(AccountQueryRequest))]
+[JsonSerializable(typeof(GetPlayerSkillRequest))]
+[JsonSerializable(typeof(Envelope<GetPlayerSkillResult>))]
+[JsonSerializable(typeof(GetPlaylistsRequest))]
+[JsonSerializable(typeof(Envelope<GetPlaylistsResult>))]
+[JsonSerializable(typeof(GetActivePlaylistsRequest))]
+[JsonSerializable(typeof(Envelope<GetActivePlaylistsResult>))]
 [JsonSerializable(typeof(Envelope<JsonElement>))]
 internal sealed partial class ApiJsonContext : JsonSerializerContext
 {

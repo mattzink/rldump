@@ -63,10 +63,10 @@ internal sealed class TourSettings
 
     public bool? bIsMultiGameMode { get; init; }
 
-    /// <summary>Game-mode index; replaced by its name in the tidy output.</summary>
+    /// <summary>Game-mode index; the tidy output keeps the raw index and adds gameModeName alongside.</summary>
     public int GameMode { get; init; }
 
-    /// <summary>Game-mode indices for composite modes; replaced by names in the tidy output.</summary>
+    /// <summary>Game-mode indices for composite modes; the tidy output keeps them raw and adds gameModeNames alongside.</summary>
     public int[] GameModes { get; init; } = [];
 
     [JsonExtensionData]

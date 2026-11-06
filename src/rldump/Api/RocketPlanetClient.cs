@@ -42,7 +42,7 @@ internal sealed class RocketPlanetClient
         Envelope<T> envelope = JsonSerializer.Deserialize(body, responseType)
             ?? throw new ApiErrorException("MalformedResponse", "the response body was empty");
         if (envelope.Error is not null)
-            throw new ApiErrorException(envelope.Error.Type, Redact(envelope.Error.Message));
+            throw ErrorException(envelope.Error);
         return envelope.Result
             ?? throw new ApiErrorException("MalformedResponse", "the response contained neither Result nor Error");
     }
@@ -62,11 +62,23 @@ internal sealed class RocketPlanetClient
         Envelope<JsonElement> envelope = JsonSerializer.Deserialize(body, responseType)
             ?? throw new ApiErrorException("MalformedResponse", "the response body was empty");
         if (envelope.Error is not null)
-            throw new ApiErrorException(envelope.Error.Type, Redact(envelope.Error.Message));
+            throw ErrorException(envelope.Error);
         if (envelope.Result.ValueKind == System.Text.Json.JsonValueKind.Undefined)
             throw new ApiErrorException("MalformedResponse", "the response contained neither Result nor Error");
         return envelope.Result;
     }
+
+    /// <summary>
+    /// Builds the <see cref="ApiErrorException"/> for an envelope <c>Error</c>,
+    /// normalizing the empty form some endpoints answer with (e.g. AccountQuery
+    /// for an unknown name: {"Error":{}}) so the CLI never prints an
+    /// empty type/message.
+    /// </summary>
+    private ApiErrorException ErrorException(ApiError error) => new(
+        string.IsNullOrEmpty(error.Type) ? "Unknown" : error.Type,
+        string.IsNullOrEmpty(error.Message)
+            ? "the API returned an error with no details"
+            : Redact(error.Message));
 
     /// <summary>Runs a QUERY request and returns the raw response body, unmodified.</summary>
     public async Task<string> QueryRawAsync<TRequest>(

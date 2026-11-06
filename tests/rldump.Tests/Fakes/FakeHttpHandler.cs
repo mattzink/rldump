@@ -26,6 +26,13 @@ public sealed class FakeHttpHandler : HttpMessageHandler
     public static FakeHttpHandler JsonResponse(string json) =>
         new((_, _) => Task.FromResult(Ok(json)));
 
+    /// <summary>
+    /// Returns a different canned JSON per request, chosen by the request URI
+    /// (for multi-step flows like player skills, which calls two endpoints).
+    /// </summary>
+    public static FakeHttpHandler ByUri(Func<string, string> jsonByUri) =>
+        new((request, _) => Task.FromResult(Ok(jsonByUri(request.RequestUri!.ToString()))));
+
     public static FakeHttpHandler Status(HttpStatusCode status, string body) =>
         new((_, _) => Task.FromResult(new HttpResponseMessage(status)
         {

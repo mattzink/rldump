@@ -60,11 +60,17 @@ internal sealed class TourSettingsOut
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? IsMultiGameMode { get; init; }
 
-    /// <summary>The mode name when known, otherwise the raw index number.</summary>
-    public GameModeName GameMode { get; init; }
+    /// <summary>The raw game-mode index from the wire.</summary>
+    public int GameMode { get; init; }
 
-    /// <summary>Mode names when known, otherwise raw index numbers.</summary>
-    public GameModeName[] GameModes { get; init; } = [];
+    /// <summary>The mode name when known, otherwise "Unknown".</summary>
+    public string GameModeName { get; init; } = "";
+
+    /// <summary>The raw game-mode indices from the wire (composite modes).</summary>
+    public int[] GameModes { get; init; } = [];
+
+    /// <summary>Names parallel to GameModes; "Unknown" for indices with no name.</summary>
+    public string[] GameModeNames { get; init; } = [];
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? ExtensionData { get; set; }

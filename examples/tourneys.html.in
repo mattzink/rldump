@@ -71,9 +71,10 @@ PUT_SCHEDULE
     const cell = (text) => { const td = document.createElement("td"); td.textContent = text ?? ""; return td; };
     for (const s of (schedule.schedules ?? [])) {
       for (const t of (s.tournaments ?? [])) {
-        // gameMode is string | number by design (unknown indices stay numbers).
+        // gameModeName is the human-readable mode ("Unknown" when the tool's
+        // mapping doesn't cover the index); gameMode is the raw index.
         const tr = document.createElement("tr");
-        tr.append(cell(t.startTime), cell(t.title), cell(t.gameMode));
+        tr.append(cell(t.startTime), cell(t.title), cell(t.gameModeName));
         tbody.appendChild(tr);
       }
     }

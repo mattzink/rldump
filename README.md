@@ -4,17 +4,36 @@
 League **"Prime"** API (`prime.rocketplanet.gg`) and prints the result as JSON.
 The output is shaped for a **web-page consumer**: IDs that would overflow
 JavaScript's safe-integer range are emitted as strings, timestamps are ISO 8601
-UTC, and game-mode indices are replaced with human-readable names (when known).
+UTC, and names are added alongside raw indices as new keys (`gameModeName`,
+`gameModeNames`, `playlistName`) — values are never replaced, and an unmapped
+index gets the string `"Unknown"`.
 
 It is a single self-contained `rldump` binary (linux-x64) with no runtime
 dependencies beyond the system C library.
 
 ## Commands
 
+The command tree mirrors the API's service layout:
+
 ```text
-schedule    Get the current tournament schedule for a region
-regions     List the valid schedule regions
+tournament
+  schedule    Get the current tournament schedule for a region (--region <CODE>)
+  regions     List the valid schedule regions
+player
+  find        Resolve a player to their account (--name <NAME>)
+  skills      Get a player's skill ratings (--name <NAME>)
+playlists
+  all         List every playlist the game knows about
+  active      List the playlists currently active on the live servers
 ```
+
+`player skills` resolves the name to an Epic account ID first
+(`GraphQL/AccountQuery`), then queries `Skills/GetPlayerSkill` with
+`PlayerID "Epic|<account ID>|0"`. Tidy mode makes a third call
+(`Config/GetPlaylists`) to add a `playlistName` alongside each skill's raw
+`playlist` index — `"Unknown"` when the playlist has no title.
+`playlists active` makes that same naming call (tidy mode only) so its
+entries carry `playlistName` alongside the raw `playlist` index too.
 
 ## Install
 
@@ -79,60 +98,24 @@ An example ships as [`rldump.json.example`](rldump.json.example): copy it to
 ## Usage
 
 ```text
-rldump schedule --region USW                        # tidy JSON to stdout
-rldump regions                                      # list valid regions
-rldump --raw schedule --region USW                  # verbatim API envelope
-rldump --compact schedule --region USW              # single-line JSON
-rldump --compact -o out.json --timeout 15 schedule --region USW
-rldump --config /path/to/rldump.json regions
+rldump tournament schedule --region USW             # tidy JSON to stdout
+rldump tournament regions                           # list valid regions
+rldump player find --name Z1nky                     # account + linked accounts
+rldump player skills --name Z1nky                   # skill ratings
+rldump playlists all                                # every known playlist
+rldump playlists active                             # currently active playlists
+rldump --raw tournament schedule --region USW       # verbatim API envelope
+rldump --compact player skills --name Z1nky         # single-line JSON
+rldump --compact -o out.json --timeout 15 tournament schedule --region USW
+rldump --config /path/to/rldump.json tournament regions
 ```
 
 Global options: `--config <PATH>`, `--raw`, `--compact`, `-o, --out <FILE>`,
 `--timeout <SECS>` (default 30), `--help`, `--version`. These are defined on the
-root command, so they must be written **before** the subcommand; subcommand
-options such as `schedule`'s `--region` come after it — e.g.
-`rldump --compact schedule --region USW`.
-
-### Sample output
-
-`rldump schedule --region USC` (excerpt — one schedule, first tournament):
-
-```json
-{
-  "schedules": [
-    {
-      "time": "2026-11-04T21:00:00Z",
-      "scheduleId": "59935",
-      "updateSkill": false,
-      "tournaments": [
-        {
-          "id": "53008201",
-          "scheduleId": "59935",
-          "startTime": "2026-11-04T21:00:00Z",
-          "public": false,
-          "gameMode": "Dropshot",
-          "gameModes": [],
-          "title": "3v3 Dropshot",
-          "creatorName": "Psyonix",
-          "region": "USC",
-          "platforms": ["Steam", "PS4", "XboxOne", "Switch", "Epic"],
-          "teamSize": 3,
-          "mapSetName": null,
-          "seriesLength": 1,
-          "finalSeriesLength": 3,
-          "isSchedulingTournament": true
-        }
-      ]
-    }
-  ]
-}
-```
-
-**`gameMode` / `gameModes` are `string | number` by design.** A known game-mode
-index is replaced with its name (`"gameMode": "Dropshot"`); an index the tool
-doesn't know (e.g. index `4`, or any future index) is kept as the raw number
-(`"gameMode": 4`). No names are invented and no data is dropped, so a consumer
-should handle both shapes.
+root command, so they must be written **before** the subcommand (before the
+group, even) — e.g. `rldump --compact tournament schedule --region USW`.
+Subcommand options such as `schedule`'s `--region` or `find`'s `--name` come
+after their command.
 
 ## Rendering an HTML page (JSON island)
 

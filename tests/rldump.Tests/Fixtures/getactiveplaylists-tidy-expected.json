@@ -1,0 +1,120 @@
+{
+  "casualPlaylists": [
+    {
+      "playlist": 1,
+      "playlistName": "Duel",
+      "nodeID": "OnesCasual",
+      "type": 1
+    },
+    {
+      "playlist": 2,
+      "playlistName": "Doubles",
+      "nodeID": "TwosCasual",
+      "type": 1
+    },
+    {
+      "playlist": 3,
+      "playlistName": "Standard",
+      "nodeID": "ThreesCasual",
+      "type": 1
+    },
+    {
+      "playlist": 4,
+      "playlistName": "Quads",
+      "nodeID": "QuadsCasual",
+      "type": 1
+    },
+    {
+      "playlist": 37,
+      "playlistName": "Dropshot Rumble",
+      "startTime": "2026-11-04T17:00:00Z",
+      "endTime": "2026-11-11T17:00:00Z",
+      "nodeID": "LargePartyCasual",
+      "type": 3
+    },
+    {
+      "playlist": 38,
+      "playlistName": "Heatseeker",
+      "startTime": "2026-11-04T17:00:00Z",
+      "endTime": "2026-11-11T17:00:00Z",
+      "nodeID": "ArcadeCasual1",
+      "type": 3
+    },
+    {
+      "playlist": 92,
+      "playlistName": "Bullet Ball",
+      "startTime": "2026-11-04T17:00:00Z",
+      "endTime": "2026-11-11T17:00:00Z",
+      "nodeID": "ArcadeCasual2",
+      "type": 3
+    }
+  ],
+  "rankedPlaylists": [
+    {
+      "playlist": 10,
+      "playlistName": "Duel",
+      "startTime": "2026-09-23T16:00:00Z",
+      "nodeID": "OnesCompetitive",
+      "type": 1
+    },
+    {
+      "playlist": 11,
+      "playlistName": "Doubles",
+      "startTime": "2026-09-23T16:00:00Z",
+      "nodeID": "TwosCompetitive",
+      "type": 1
+    },
+    {
+      "playlist": 13,
+      "playlistName": "Standard",
+      "startTime": "2026-09-23T16:00:00Z",
+      "nodeID": "ThreesCompetitive",
+      "type": 1
+    },
+    {
+      "playlist": 27,
+      "playlistName": "Hoops",
+      "startTime": "2026-09-23T16:00:00Z",
+      "nodeID": "ExtraCompetitive2",
+      "type": 2
+    },
+    {
+      "playlist": 28,
+      "playlistName": "Rumble",
+      "startTime": "2026-09-23T16:00:00Z",
+      "nodeID": "ExtraCompetitive1",
+      "type": 2
+    },
+    {
+      "playlist": 29,
+      "playlistName": "Dropshot",
+      "startTime": "2026-09-23T16:00:00Z",
+      "nodeID": "QuadsCompetitive",
+      "type": 2
+    },
+    {
+      "playlist": 30,
+      "playlistName": "Snow Day",
+      "startTime": "2026-09-23T16:00:00Z",
+      "nodeID": "SeasonalExtraCompetitive",
+      "type": 2
+    },
+    {
+      "playlist": 63,
+      "playlistName": "Heatseeker",
+      "startTime": "2026-09-23T16:00:00Z",
+      "nodeID": "ExtraCompetitive0",
+      "type": 2
+    }
+  ],
+  "xpLevelUnlocked": 20,
+  "rankedUnlock": {
+    "criteria": "Challenges",
+    "value": [
+      8,
+      9,
+      10,
+      11
+    ]
+  }
+}

@@ -1,13 +1,13 @@
 using System.Globalization;
-using System.Text.Json;
 using Rldump.Api;
 
 namespace Rldump.Output;
 
 /// <summary>
 /// Maps the GetSchedule API result to the tidy output model:
-/// IDs → strings, epoch seconds → ISO 8601 UTC, bX → x, mode indices → names,
-/// and extension data passed through with camelCased keys.
+/// IDs → strings, epoch seconds → ISO 8601 UTC, bX → x, mode names added
+/// alongside the raw indices, and extension data passed through with
+/// camelCased keys.
 /// </summary>
 internal static class ScheduleOutputMapper
 {
@@ -18,7 +18,7 @@ internal static class ScheduleOutputMapper
         return new ScheduleOutput
         {
             Schedules = result.Schedules.Select(entry => MapSchedule(entry, modeNames)).ToArray(),
-            ExtensionData = CamelCaseKeys(result.ExtensionData),
+            ExtensionData = TidyJson.CamelCaseKeys(result.ExtensionData),
         };
     }
 
@@ -30,7 +30,7 @@ internal static class ScheduleOutputMapper
             ScheduleId = entry.ScheduleID.ToString(Invariant),
             UpdateSkill = entry.bUpdateSkill,
             Tournaments = entry.Tournaments.Select(t => MapTournament(t, modeNames)).ToArray(),
-            ExtensionData = CamelCaseKeys(entry.ExtensionData),
+            ExtensionData = TidyJson.CamelCaseKeys(entry.ExtensionData),
         };
     }
 
@@ -45,37 +45,20 @@ internal static class ScheduleOutputMapper
             MatchExpireTimestamp = t.MatchExpireTimestamp is long m ? ToIso8601Utc(m) : null,
             Public = t.bPublic,
             IsMultiGameMode = t.bIsMultiGameMode,
-            GameMode = ToModeName(t.GameMode, modeNames),
-            GameModes = t.GameModes.Select(index => ToModeName(index, modeNames)).ToArray(),
-            ExtensionData = CamelCaseKeys(t.ExtensionData),
+            GameMode = t.GameMode,
+            GameModeName = ToModeName(t.GameMode, modeNames),
+            GameModes = t.GameModes,
+            GameModeNames = t.GameModes.Select(index => ToModeName(index, modeNames)).ToArray(),
+            ExtensionData = TidyJson.CamelCaseKeys(t.ExtensionData),
         };
     }
 
-    private static GameModeName ToModeName(int index, IReadOnlyDictionary<int, string> modeNames) =>
-        modeNames.TryGetValue(index, out string? name)
-            ? new GameModeName(index, name)
-            : new GameModeName(index, null);
+    /// <summary>The mode name when the index is in the mapping, otherwise "Unknown".</summary>
+    private static string ToModeName(int index, IReadOnlyDictionary<int, string> modeNames) =>
+        modeNames.TryGetValue(index, out string? name) ? name! : "Unknown";
 
     /// <summary>Unix seconds → "yyyy-MM-ddTHH:mm:ssZ" (UTC), without DateTime round-trips.</summary>
     private static string ToIso8601Utc(long unixSeconds) =>
         DateTimeOffset.FromUnixTimeSeconds(unixSeconds)
             .ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", Invariant);
-
-    /// <summary>
-    /// Copies extension data, camelCasing each key. The serializer writes
-    /// extension-data keys verbatim (the naming policy does not apply to them),
-    /// so this must happen here. CamelCase is idempotent on already-camelCased
-    /// names, so keys that were added by the API in either casing come out
-    /// consistently.
-    /// </summary>
-    private static Dictionary<string, JsonElement>? CamelCaseKeys(Dictionary<string, JsonElement>? data)
-    {
-        if (data is null)
-            return null;
-
-        Dictionary<string, JsonElement> result = new(data.Count);
-        foreach ((string key, JsonElement value) in data)
-            result[System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(key)] = value;
-        return result;
-    }
 }

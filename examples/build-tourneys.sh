@@ -12,8 +12,9 @@
 #
 # NOTE on argument order: rldump's global options (--compact, --raw, -o,
 # --timeout, --config) are defined on the root command, so they must come
-# BEFORE the subcommand. `--region` belongs to `schedule`, so it comes after it:
-#   rldump --compact schedule --region USW
+# BEFORE the subcommand (before the group, even). `--region` belongs to
+# `schedule`, so it comes after it:
+#   rldump --compact tournament schedule --region USW
 set -euo pipefail
 
 RLDUMP=${RLDUMP:-rldump}
@@ -33,8 +34,8 @@ trap 'rm -rf "$tmpdir"' EXIT
 
 # Fetch compact (single-line) JSON. `set -e` aborts on any rldump failure,
 # before the file is written (propagating rldump's exit codes 1/3/4).
-"$RLDUMP" --compact schedule --region "$REGION" > "$tmpdir/schedule.json"
-"$RLDUMP" --compact regions > "$tmpdir/regions.json"
+"$RLDUMP" --compact tournament schedule --region "$REGION" > "$tmpdir/schedule.json"
+"$RLDUMP" --compact tournament regions > "$tmpdir/regions.json"
 
 # Replace each whole-line marker with the file's contents (verbatim, one pass).
 # The inserted JSON is emitted as-is and not re-scanned, so a `$` inside a

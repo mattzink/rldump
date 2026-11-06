@@ -85,6 +85,23 @@ public class RocketPlanetClientTests
     }
 
     [Fact]
+    public async Task EmptyErrorEnvelope_ThrowsWithNormalizedTypeAndMessage()
+    {
+        // AccountQuery answers unknown names with a bare {"Error":{}} — the
+        // client must not surface an empty type/message to the CLI.
+        var handler = FakeHttpHandler.JsonResponse("""{ "Error": {} }""");
+        RocketPlanetClient client = NewClient(handler);
+
+        ApiErrorException ex = await Assert.ThrowsAsync<ApiErrorException>(() =>
+            client.QueryOpaqueAsync(ApiPaths.AccountQuery, new AccountQueryRequest { User = "qqqzzz999" },
+                ApiJsonContext.Default.AccountQueryRequest, ApiJsonContext.Default.EnvelopeJsonElement,
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal("Unknown", ex.Type);
+        Assert.Equal("the API returned an error with no details", ex.Message);
+    }
+
+    [Fact]
     public async Task ErrorEnvelope_RedactsTokenInMessage()
     {
         string body = $$"""{ "Error": { "Message": "echo {{Token}}", "Type": "NotLoggedIn" } }""";

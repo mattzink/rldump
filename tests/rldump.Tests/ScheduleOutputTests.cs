@@ -28,27 +28,28 @@ public class ScheduleOutputTests
     }
 
     [Fact]
-    public void Map_KnownModes_ReplaceIndicesWithNames()
+    public void Map_KnownModes_AddNamesAlongsideRawIndices()
     {
         ScheduleOutput output = ScheduleOutputMapper.Map(LoadFixture(), Modes.Modes);
 
         // First fixture tournament: 3v3 Dropshot, GameMode 5, no sub-modes.
         TourSettingsOut first = output.Schedules[0].Tournaments[0];
-        Assert.Equal("Dropshot", first.GameMode.Name);
-        Assert.Equal(5, first.GameMode.Index);
+        Assert.Equal(5, first.GameMode);
+        Assert.Equal("Dropshot", first.GameModeName);
         Assert.Empty(first.GameModes);
+        Assert.Empty(first.GameModeNames);
 
         // A Pentathlon tournament: GameMode 27 with GameModes [3, 12, 20, 1, 6].
         // The fixture has four Pentathlon tournaments, so select the first with
         // this exact sub-mode sequence (order is preserved by the mapper).
         TourSettingsOut pentathlon = output.Schedules
             .SelectMany(s => s.Tournaments)
-            .First(t => t.GameMode.Index == 27
-                && t.GameModes.Select(m => m.Index).SequenceEqual([3, 12, 20, 1, 6]));
-        Assert.Equal("Pentathlon Tournament", pentathlon.GameMode.Name);
+            .First(t => t.GameMode == 27
+                && t.GameModes.SequenceEqual([3, 12, 20, 1, 6]));
+        Assert.Equal("Pentathlon Tournament", pentathlon.GameModeName);
         Assert.Equal(
             ["Rumble", "Dropshot Rumble", "Super Cube", "Hoops", "Heatseeker"],
-            pentathlon.GameModes.Select(m => m.Name));
+            pentathlon.GameModeNames);
     }
 
     [Fact]
@@ -67,7 +68,7 @@ public class ScheduleOutputTests
     }
 
     [Fact]
-    public void Map_UnknownModeIndices_StayRawNumbers()
+    public void Map_UnknownModeIndices_StayRawNumbers_WithNameUnknown()
     {
         JsonNode node = JsonNode.Parse(Fixtures.Read("getschedule-success.json"))!;
         JsonObject tour = (JsonObject)node["Result"]!["Schedules"]![0]!["Tournaments"]![0]!;
@@ -78,12 +79,15 @@ public class ScheduleOutputTests
         string json = JsonSerialize.Schedule(ScheduleOutputMapper.Map(result, Modes.Modes));
         JsonObject outTour = (JsonObject)JsonNode.Parse(json)!["schedules"]![0]!["tournaments"]![0]!;
 
-        // Unknown indices are written as raw JSON numbers, not mode names
-        // (GetValue<int> would throw if the converter had written a string).
+        // Unknown indices stay raw JSON numbers (GetValue<int> would throw if a
+        // string had been written), and their names come out "Unknown".
         Assert.Equal(4, outTour["gameMode"]!.GetValue<int>());
+        Assert.Equal("Unknown", (string?)outTour["gameModeName"]!);
         JsonArray modes = (JsonArray)outTour["gameModes"]!;
         Assert.Single(modes);
         Assert.Equal(999, modes[0]!.GetValue<int>());
+        JsonArray modeNames = (JsonArray)outTour["gameModeNames"]!;
+        Assert.Equal("Unknown", (string?)modeNames[0]!);
     }
 
     [Fact]

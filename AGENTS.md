@@ -48,21 +48,36 @@ Run `mise run test` after any code change. The full gate is
   that can't be inherited (the `JsonSerializerContext` partials included); `static`
   classes and `record struct`s are implicitly sealed. Members of internal classes
   stay `public` (they're effectively internal anyway).
-- **Tidy-output invariants** (non-`--raw` only): IDs are **strings** (they exceed JS
-  safe-integer precision), timestamps are **ISO 8601 UTC**
-  (`yyyy-MM-ddTHH:mm:ssZ`), unknown game-mode indices stay **numbers**, and
-  `--raw` is always verbatim.
+- **Tidy-output invariants** (non-`--raw` only): IDs that exceed JS
+  safe-integer precision are **strings**, timestamps are **ISO 8601 UTC**
+  (`yyyy-MM-ddTHH:mm:ssZ`), `b`-prefixed wire fields lose the prefix, and raw
+  index fields (e.g. game modes, playlists) always stay **numbers** with the
+  human-readable name added **alongside** them, never replacing the wire
+  value; an index the name mapping doesn't know gets the string `"Unknown"`.
+  `--raw` is always verbatim. Endpoints whose fields need no value transform
+  print the `Result` payload with all object keys recursively camelCased
+  (values verbatim). The concrete name keys and per-command flows are
+  documented in the output models, the mappers, and `Output/TidyJson.cs`.
+- **The command tree mirrors the API's service layout**: endpoints are grouped
+  under a group command, which has no action of its own — a bare group is a
+  usage error (exit 2). Global options are defined on the root, so they must
+  be written before the first subcommand (`rldump --raw <group> <subcommand>
+  …`). Commands with auxiliary lookups (resolving a name, fetching names for
+  raw indices) make them in tidy mode only; `--raw` skips them and prints the
+  command's own envelope verbatim.
 - **Model only what you transform.** Response models declare explicitly only the
   fields the tidy output *transforms*; every other wire field flows through
   `[JsonExtensionData]` (`Dictionary<string, JsonElement>`). Never add a pass-through
   field to a model because you noticed it on the wire — it already passes through.
   Model a field only when it needs a transform. Extension-data keys are written
   **verbatim** by the serializer (the naming policy does not apply to them), so the
-  mapping step (`ScheduleOutputMapper.CamelCaseKeys`) camelCases them itself.
-- **Game-mode mapping** is embedded data extracted from the game binary:
-  `src/rldump/Data/gamemodes.json` (indices 0–3, 5–33; index 4 is absent). Known
-  index → name string; unknown index → raw number. When the game ships a new build,
-  replace that file and rebuild.
+  shared mapping helper (`TidyJson.CamelCaseKeys`) camelCases them itself —
+  recursively, including nested objects, since extension values also serialize
+  verbatim.
+- **Name mappings** either embed game data — a new game build then requires
+  updating the data file and rebuilding — or are fetched from the live API
+  (no rebuild). Each mapping's code says which applies and where the data
+  comes from.
 - **Token handling**: the bearer token is read from config only and must **never**
   appear in any output or log — defensive redaction strips the configured token
   value from any message built from response text. Config search order is
@@ -72,11 +87,12 @@ Run `mise run test` after any code change. The full gate is
 - **Canonical API reference** is the live docs data endpoints
   (`/docs/index.json`, `/docs/contract?service=…`). Consult them before adding an
   endpoint; the reflected response types can be incomplete (live responses may carry
-  extra fields, e.g. `IsSchedulingTournament` — which is exactly what the
-  extension-data path exists to absorb).
-- **The wire fixture is ground truth**: `tests/rldump.Tests/Fixtures/getschedule-success.json`
-  is a verbatim copy of a real curl response. Do not edit it; derive test
-  expectations from it.
+  extra fields — which is exactly what the extension-data path exists to absorb).
+- **The wire fixtures are ground truth**: every
+  `tests/rldump.Tests/Fixtures/*-success.json` is a verbatim copy of a real
+  curl response. Do not edit them; derive test expectations from them. The
+  `*-tidy-expected.json` files are expected tidy output regenerated through
+  the real code path when a transform changes.
 
 ## Agent Rules
 

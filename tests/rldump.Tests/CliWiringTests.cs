@@ -13,10 +13,52 @@ public class CliWiringTests
     {
         using var console = new ConsoleCapture();
 
-        int code = await Program.Run(["schedule"]);
+        int code = await Program.Run(["tournament", "schedule"]);
 
         Assert.Equal(2, code);
         Assert.Contains("--region", console.StdErr.ToString());
+    }
+
+    [Fact]
+    public async Task PlayerFindWithoutName_Exit2_UsageOnStderr()
+    {
+        using var console = new ConsoleCapture();
+
+        int code = await Program.Run(["player", "find"]);
+
+        Assert.Equal(2, code);
+        Assert.Contains("--name", console.StdErr.ToString());
+    }
+
+    [Fact]
+    public async Task BareGroupCommand_Exit2_UsageOnStdout()
+    {
+        using var console = new ConsoleCapture();
+
+        int code = await Program.Run(["tournament"]);
+
+        // A group with no subcommand is a usage error (System.CommandLine's
+        // "Required command was not provided."), not a success. The error goes
+        // to stderr; the usage block (with the subcommands) goes to stdout.
+        Assert.Equal(2, code);
+        Assert.Contains("Required command was not provided.", console.StdErr.ToString());
+        Assert.Contains("schedule", console.StdOut.ToString());
+        Assert.Contains("regions", console.StdOut.ToString());
+    }
+
+    [Fact]
+    public async Task BarePlaylistsGroup_Exit2_UsageOnStdout()
+    {
+        using var console = new ConsoleCapture();
+
+        int code = await Program.Run(["playlists"]);
+
+        Assert.Equal(2, code);
+        Assert.Contains("Required command was not provided.", console.StdErr.ToString());
+        // The usage block lists the group's subcommands.
+        string stdout = console.StdOut.ToString();
+        Assert.Matches("(?m)^\\s+all\\s", stdout);
+        Assert.Matches("(?m)^\\s+active\\s", stdout);
     }
 
     [Fact]
@@ -30,17 +72,27 @@ public class CliWiringTests
     }
 
     [Fact]
-    public async Task UnknownOption_Exit2()
+    public async Task UnknownSubcommand_Exit2()
     {
         using var console = new ConsoleCapture();
 
-        int code = await Program.Run(["schedule", "--region", "USW", "--bogus"]);
+        int code = await Program.Run(["tournament", "bogus"]);
 
         Assert.Equal(2, code);
     }
 
     [Fact]
-    public async Task Help_Exit0_CommandsListedOnStdout()
+    public async Task UnknownOption_Exit2()
+    {
+        using var console = new ConsoleCapture();
+
+        int code = await Program.Run(["tournament", "schedule", "--region", "USW", "--bogus"]);
+
+        Assert.Equal(2, code);
+    }
+
+    [Fact]
+    public async Task Help_Exit0_GroupsListedOnStdout()
     {
         using var console = new ConsoleCapture();
 
@@ -48,8 +100,11 @@ public class CliWiringTests
 
         Assert.Equal(0, code);
         string stdout = console.StdOut.ToString();
-        Assert.Contains("schedule", stdout);
-        Assert.Contains("regions", stdout);
+        // The root help lists the command groups; the nested commands show up
+        // in the group help.
+        Assert.Contains("tournament", stdout);
+        Assert.Contains("player", stdout);
+        Assert.Contains("playlists", stdout);
         Assert.Contains("--raw", stdout);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(stdout, "(?m)^\\s+--version\\b"));
     }

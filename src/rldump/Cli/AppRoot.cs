@@ -9,8 +9,9 @@ internal static class AppRoot
     {
         var root = new RootCommand("Query the Rocket League Prime API and print the result as JSON.");
         GlobalOptions.AddAll(root);
-        root.Add(ScheduleCommand.Build());
-        root.Add(RegionsCommand.Build());
+        root.Add(TournamentCommand.Build());
+        root.Add(PlayerCommand.Build());
+        root.Add(PlaylistsCommand.Build());
         // The root command provides -?/-h/--help and --version automatically.
         return root;
     }
