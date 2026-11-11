@@ -1,5 +1,7 @@
 using System.Text.Json.Nodes;
+using Rldump.Api;
 using Rldump.Cli;
+using Rldump.Output;
 using Rldump.Tests.Fakes;
 
 namespace Rldump.Tests;
@@ -71,12 +73,50 @@ public class PlayerSkillsCommandTests
             Assert.Equal(expectedNames[i], (string?)skills[i]!["playlistName"]!);
         }
 
+        Assert.Equal(1086, (int)skills[3]!["rating"]!);
+        Assert.Equal(49.2937, (double)skills[3]!["mu"]!, precision: 4);
+        Assert.Equal(16, (int)skills[3]!["tier"]!);
+        Assert.Equal("Champion I", (string?)skills[3]!["tierName"]);
+
         // Pass-through fields keep their values with camelCased keys.
         Assert.Equal(41.9739, (double)skills[1]!["mmr"]!, precision: 4);
         Assert.Equal(-1, (int)skills[1]!["winStreak"]!);
         Assert.Equal(5, (int)node["rewardLevels"]!["seasonLevel"]!);
         Assert.Equal(4, (int)node["rewardLevels"]!["seasonLevelWins"]!);
         Assert.DoesNotContain(Token, console.StdOut.ToString());
+    }
+
+    [Fact]
+    public void Rating_ConvertsMuToDisplayedWholeNumber()
+    {
+        GetPlayerSkillResult result = new()
+        {
+            Skills = [new SkillEntry { Playlist = 13, Mu = 50.3191 }],
+        };
+
+        PlayerSkillOutput output = PlayerSkillOutputMapper.Map(result, new Dictionary<int, string>());
+
+        Assert.Equal(50.3191, output.Skills[0].Mu!.Value, precision: 4);
+        Assert.Equal(1106, output.Skills[0].Rating);
+    }
+
+    [Fact]
+    public void TierName_MapsRocketLeagueRankTiers()
+    {
+        int[] tiers = [0, 1, 12, 13, 16, 19, 21, 22, 23];
+        string[] names = [
+            "Unranked", "Bronze I", "Platinum III", "Diamond I", "Champion I",
+            "Grand Champion I", "Grand Champion III", "Supersonic Legend", "Unknown",
+        ];
+        GetPlayerSkillResult result = new()
+        {
+            Skills = tiers.Select(tier => new SkillEntry { Tier = tier }).ToList(),
+        };
+
+        PlayerSkillOutput output = PlayerSkillOutputMapper.Map(result, new Dictionary<int, string>());
+
+        Assert.Equal(tiers, output.Skills.Select(skill => skill.Tier!.Value).ToArray());
+        Assert.Equal(names, output.Skills.Select(skill => skill.TierName).ToArray());
     }
 
     [Fact]

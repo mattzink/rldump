@@ -13,15 +13,18 @@ internal sealed class GetPlayerSkillRequest
 }
 
 /// <summary>
-/// Wire model for one skill entry. Only the field that needs more than a
-/// pass-through (Playlist, which gets a name alongside the raw index) is
-/// declared explicitly; every other wire field (Mu, Sigma, Tier, …) flows
-/// through <see cref="ExtensionData"/>.
+/// Wire model for one skill entry. Playlist and Mu are declared explicitly
+/// because tidy output adds their name and a display rating, respectively.
+/// Every other wire field flows through <see cref="ExtensionData"/>.
 /// </summary>
 internal sealed class SkillEntry
 {
     /// <summary>Playlist index; named via Config/GetPlaylists in the tidy output.</summary>
     public int? Playlist { get; init; }
+
+    public double? Mu { get; init; }
+
+    public int? Tier { get; init; }
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? ExtensionData { get; set; }
