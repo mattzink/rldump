@@ -8,6 +8,7 @@ internal static class ApiPaths
     public const string AccountQuery = "/GraphQL/AccountQuery";
     public const string GetPlayerSkill = "/Skills/GetPlayerSkill";
     public const string GetPlayerClubDetails = "/Clubs/GetPlayerClubDetails";
+    public const string GetClubStats = "/Clubs/GetStats";
     public const string GetPlaylists = "/Config/GetPlaylists";
     public const string GetActivePlaylists = "/Playlists/GetActivePlaylists";
 }

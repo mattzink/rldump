@@ -148,6 +148,30 @@ internal static class RldumpApp
         }, options, handler, ct);
     }
 
+    /// <summary>
+    /// club stats: Clubs/GetStats with the requested ClubID. The endpoint
+    /// result needs only recursive key casing in tidy mode; raw mode prints
+    /// the complete envelope verbatim.
+    /// </summary>
+    public static async Task<int> ClubStatsAsync(ulong clubId, CliOptions options, HttpMessageHandler? handler, CancellationToken ct)
+    {
+        return await Runner.RunAsync(async (client, token) =>
+        {
+            GetClubStatsRequest request = new() { ClubID = clubId };
+
+            if (options.Raw)
+            {
+                string body = await client.QueryRawAsync(ApiPaths.GetClubStats, request, ApiJsonContext.Default.GetClubStatsRequest, token);
+                return JsonFormat.Format(body, options.Compact);
+            }
+
+            JsonElement result = await client.QueryOpaqueAsync(
+                ApiPaths.GetClubStats, request,
+                ApiJsonContext.Default.GetClubStatsRequest, ApiJsonContext.Default.EnvelopeJsonElement, token);
+            return JsonFormat.Format(TidyJson.CamelCaseKeys(result), options.Compact);
+        }, options, handler, ct);
+    }
+
     private static async Task<string> ResolveEpicPlayerIdAsync(RocketPlanetClient client, string player, CancellationToken token)
     {
         if (EpicPlayerId.TryGetAccountId(player, out _))

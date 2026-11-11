@@ -1,0 +1,55 @@
+{
+  "Result": {
+    "CareerStats": {
+      "TimePlayed": 1262537,
+      "Goal": 9293,
+      "AerialGoal": 1794,
+      "LongGoal": 686,
+      "BackwardsGoal": 106,
+      "OvertimeGoal": 298,
+      "TurtleGoal": 13,
+      "Assist": 5030,
+      "Playmaker": 163,
+      "Save": 10142,
+      "EpicSave": 3017,
+      "Savior": 1106,
+      "Shot": 24700,
+      "Center": 31694,
+      "Clear": 20983,
+      "AerialHit": 33972,
+      "BicycleHit": 569,
+      "JuggleHit": 188,
+      "Demolish": 7799,
+      "Demolition": 6,
+      "FirstTouch": 9344,
+      "PoolShot": 24,
+      "LowFive": 201,
+      "HighFive": 5,
+      "BreakoutDamage": 17876,
+      "BreakoutDamageLarge": 14772,
+      "HoopsSwishGoal": 365,
+      "MatchPlayed": 4505,
+      "Win": 2119
+    },
+    "SeasonalStats": [
+      { "Stat": "Goal", "Milestones": [225, 675, 2025], "Value": 717, "Badge": 2 },
+      { "Stat": "Save", "Milestones": [150, 450, 1350], "Value": 746, "Badge": 2 },
+      { "Stat": "Assist", "Milestones": [75, 225, 675], "Value": 407, "Badge": 2 }
+    ],
+    "PreviousSeasonalBadges": [
+      { "Season": 33, "Badges": [{ "Stat": "Goal", "Badge": 3 }, { "Stat": "Save", "Badge": 3 }, { "Stat": "Assist", "Badge": 3 }] },
+      { "Season": 34, "Badges": [{ "Stat": "Goal", "Badge": 2 }, { "Stat": "Save", "Badge": 3 }, { "Stat": "Assist", "Badge": 3 }] },
+      { "Season": 35, "Badges": [{ "Stat": "Goal", "Badge": 2 }, { "Stat": "Save", "Badge": 3 }, { "Stat": "Assist", "Badge": 3 }] },
+      { "Season": 36, "Badges": [{ "Stat": "Goal", "Badge": 2 }, { "Stat": "Save", "Badge": 3 }, { "Stat": "Assist", "Badge": 3 }] },
+      { "Season": 37, "Badges": [{ "Stat": "Goal", "Badge": 2 }, { "Stat": "Save", "Badge": 3 }, { "Stat": "Assist", "Badge": 3 }] }
+    ],
+    "SeasonalTitles": [
+      { "Badge": 1, "Title": "Club_S24_M1" },
+      { "Badge": 1, "Title": "Club_S24_M2" },
+      { "Badge": 2, "Title": "Club_S24_M3" },
+      { "Badge": 2, "Title": "Club_Freshly_Imported" },
+      { "Badge": 3, "Title": "Club_Raw_Muscle_Power" },
+      { "Badge": 3, "Title": "Club_MVP_or_Bust" }
+    ]
+  }
+}

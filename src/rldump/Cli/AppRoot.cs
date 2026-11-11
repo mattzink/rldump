@@ -11,6 +11,7 @@ internal static class AppRoot
         GlobalOptions.AddAll(root);
         root.Add(TournamentCommand.Build());
         root.Add(PlayerCommand.Build());
+        root.Add(ClubCommand.Build());
         root.Add(PlaylistsCommand.Build());
         // The root command provides -?/-h/--help and --version automatically.
         return root;

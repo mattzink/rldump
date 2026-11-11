@@ -20,6 +20,28 @@ public class CliWiringTests
     }
 
     [Fact]
+    public async Task ClubStatsWithoutId_Exit2_UsageOnStderr()
+    {
+        using var console = new ConsoleCapture();
+
+        int code = await Program.Run(["club", "stats"]);
+
+        Assert.Equal(2, code);
+        Assert.Contains("--id", console.StdErr.ToString());
+    }
+
+    [Fact]
+    public async Task ClubStatsWithInvalidId_Exit2_UsageOnStderr()
+    {
+        using var console = new ConsoleCapture();
+
+        int code = await Program.Run(["club", "stats", "--id", "not-a-number"]);
+
+        Assert.Equal(2, code);
+        Assert.Contains("--id must be a positive unsigned integer", console.StdErr.ToString());
+    }
+
+    [Fact]
     public async Task PlayerFindWithoutIdentifier_Exit2_UsageOnStderr()
     {
         using var console = new ConsoleCapture();

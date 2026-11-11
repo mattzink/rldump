@@ -23,6 +23,8 @@ player
   find        Resolve a player to their account (--name <NAME> | --epic-id <ID>)
   skills      Get a player's skill ratings (--name <NAME> | --epic-id <ID>)
   club        Get a player's club details (--name <NAME> | --epic-id <ID>)
+club
+  stats       Get club career and seasonal stats (--id <ID>)
 playlists
   all         List every playlist the game knows about
   active      List the playlists currently active on the live servers
@@ -41,6 +43,7 @@ club use it directly without an account lookup. `player find` queries
 `GraphQL/AccountQuery` with the account ID from that Epic player ID.
 `playlists active` makes that same naming call (tidy mode only) so its
 entries carry `playlistName` alongside the raw `playlist` index too.
+`club stats --id <ID>` queries `Clubs/GetStats` for the specified club ID.
 
 ## Install
 
@@ -113,6 +116,7 @@ rldump player find --name Z1nky                     # account + linked accounts
 rldump player skills --name Z1nky                   # skill ratings
 rldump player club --name Z1nky                     # club details
 rldump player club --epic-id "Epic|8dd6950d3a2b4a8d964173e775be565b|0"
+rldump club stats --id 156045                      # club career and seasonal stats
 rldump playlists all                                # every known playlist
 rldump playlists active                             # currently active playlists
 rldump --raw tournament schedule --region USW       # verbatim API envelope
