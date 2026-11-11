@@ -20,7 +20,7 @@ public class CliWiringTests
     }
 
     [Fact]
-    public async Task PlayerFindWithoutName_Exit2_UsageOnStderr()
+    public async Task PlayerFindWithoutIdentifier_Exit2_UsageOnStderr()
     {
         using var console = new ConsoleCapture();
 
@@ -31,7 +31,7 @@ public class CliWiringTests
     }
 
     [Fact]
-    public async Task PlayerClubWithoutName_Exit2_UsageOnStderr()
+    public async Task PlayerClubWithoutIdentifier_Exit2_UsageOnStderr()
     {
         using var console = new ConsoleCapture();
 
@@ -39,6 +39,28 @@ public class CliWiringTests
 
         Assert.Equal(2, code);
         Assert.Contains("--name", console.StdErr.ToString());
+    }
+
+    [Fact]
+    public async Task PlayerSkillsWithBothIdentifiers_Exit2_UsageOnStderr()
+    {
+        using var console = new ConsoleCapture();
+
+        int code = await Program.Run(["player", "skills", "--name", "Z1nky", "--epic-id", "Epic|15ca5c7db5b44f9f9a50e3f410a889ef|0"]);
+
+        Assert.Equal(2, code);
+        Assert.Contains("specify exactly one of --name or --epic-id", console.StdErr.ToString());
+    }
+
+    [Fact]
+    public async Task PlayerClubWithMalformedEpicId_Exit2_UsageOnStderr()
+    {
+        using var console = new ConsoleCapture();
+
+        int code = await Program.Run(["player", "club", "--epic-id", "not-an-epic-id"]);
+
+        Assert.Equal(2, code);
+        Assert.Contains("--epic-id must use the form", console.StdErr.ToString());
     }
 
     [Fact]

@@ -121,6 +121,22 @@ public class PlayerSkillsCommandTests
     }
 
     [Fact]
+    public async Task EpicPlayerId_SkipsAccountLookup()
+    {
+        using var dir = new TempDir();
+        string configPath = dir.WriteConfig("rldump.json", ConfigJson());
+        var handler = EndpointHandler();
+
+        int code = await RldumpApp.PlayerSkillsAsync("Epic|" + AccountId + "|0", Options(configPath), handler, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, code);
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal("{\"PlayerID\":\"Epic|" + AccountId + "|0\"}", handler.Requests[0].Body);
+        Assert.Contains("/Skills/GetPlayerSkill", handler.Requests[0].Uri.ToString());
+        Assert.Contains("/Config/GetPlaylists", handler.Requests[1].Uri.ToString());
+    }
+
+    [Fact]
     public async Task AccountQueryError_Exit1_NoSkillRequest()
     {
         using var dir = new TempDir();

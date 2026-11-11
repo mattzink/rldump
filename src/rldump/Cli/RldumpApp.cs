@@ -65,7 +65,10 @@ internal static class RldumpApp
     {
         return await Runner.RunAsync(async (client, token) =>
         {
-            AccountQueryRequest request = new() { User = name };
+            AccountQueryRequest request = new()
+            {
+                User = EpicPlayerId.TryGetAccountId(name, out string accountId) ? accountId : name,
+            };
 
             if (options.Raw)
             {
@@ -93,14 +96,8 @@ internal static class RldumpApp
     {
         return await Runner.RunAsync(async (client, token) =>
         {
-            AccountQueryRequest findRequest = new() { User = name };
-            JsonElement account = await client.QueryOpaqueAsync(
-                ApiPaths.AccountQuery, findRequest,
-                ApiJsonContext.Default.AccountQueryRequest, ApiJsonContext.Default.EnvelopeJsonElement, token);
-            string accountId = account.GetProperty("AccountID").GetString()
-                ?? throw new ApiErrorException("MalformedResponse", "the account lookup did not return an AccountID");
-
-            GetPlayerSkillRequest request = new() { PlayerID = $"Epic|{accountId}|0" };
+            string playerId = await ResolveEpicPlayerIdAsync(client, name, token);
+            GetPlayerSkillRequest request = new() { PlayerID = playerId };
 
             if (options.Raw)
             {
@@ -125,8 +122,8 @@ internal static class RldumpApp
 
     /// <summary>
     /// player club: resolve the name to an Epic account ID via
-    /// GraphQL/AccountQuery, then call Clubs/GetPlayerClubDetails with
-    /// PlayerID "Epic|&lt;account ID&gt;|0". Raw mode prints the club endpoint
+    /// GraphQL/AccountQuery (or use an Epic player ID directly), then call
+    /// Clubs/GetPlayerClubDetails. Raw mode prints the club endpoint
     /// envelope verbatim; tidy mode stringifies 64-bit values and camelCases
     /// the remaining fields.
     /// </summary>
@@ -134,14 +131,8 @@ internal static class RldumpApp
     {
         return await Runner.RunAsync(async (client, token) =>
         {
-            AccountQueryRequest findRequest = new() { User = name };
-            JsonElement account = await client.QueryOpaqueAsync(
-                ApiPaths.AccountQuery, findRequest,
-                ApiJsonContext.Default.AccountQueryRequest, ApiJsonContext.Default.EnvelopeJsonElement, token);
-            string accountId = account.GetProperty("AccountID").GetString()
-                ?? throw new ApiErrorException("MalformedResponse", "the account lookup did not return an AccountID");
-
-            GetPlayerClubDetailsRequest request = new() { PlayerID = $"Epic|{accountId}|0" };
+            string playerId = await ResolveEpicPlayerIdAsync(client, name, token);
+            GetPlayerClubDetailsRequest request = new() { PlayerID = playerId };
 
             if (options.Raw)
             {
@@ -155,6 +146,20 @@ internal static class RldumpApp
             PlayerClubOutput output = PlayerClubOutputMapper.Map(result);
             return JsonFormat.Format(JsonSerialize.PlayerClub(output), options.Compact);
         }, options, handler, ct);
+    }
+
+    private static async Task<string> ResolveEpicPlayerIdAsync(RocketPlanetClient client, string player, CancellationToken token)
+    {
+        if (EpicPlayerId.TryGetAccountId(player, out _))
+            return player;
+
+        AccountQueryRequest findRequest = new() { User = player };
+        JsonElement account = await client.QueryOpaqueAsync(
+            ApiPaths.AccountQuery, findRequest,
+            ApiJsonContext.Default.AccountQueryRequest, ApiJsonContext.Default.EnvelopeJsonElement, token);
+        string accountId = account.GetProperty("AccountID").GetString()
+            ?? throw new ApiErrorException("MalformedResponse", "the account lookup did not return an AccountID");
+        return $"Epic|{accountId}|0";
     }
 
     /// <summary>

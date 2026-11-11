@@ -20,9 +20,9 @@ tournament
   schedule    Get the current tournament schedule for a region (--region <CODE>)
   regions     List the valid schedule regions
 player
-  find        Resolve a player to their account (--name <NAME>)
-  skills      Get a player's skill ratings (--name <NAME>)
-  club        Get a player's club details (--name <NAME>)
+  find        Resolve a player to their account (--name <NAME> | --epic-id <ID>)
+  skills      Get a player's skill ratings (--name <NAME> | --epic-id <ID>)
+  club        Get a player's club details (--name <NAME> | --epic-id <ID>)
 playlists
   all         List every playlist the game knows about
   active      List the playlists currently active on the live servers
@@ -35,6 +35,10 @@ playlists
 `playlist` index — `"Unknown"` when the playlist has no title.
 `player club` resolves the name the same way, then queries
 `Clubs/GetPlayerClubDetails` and returns the club details.
+Each player command accepts exactly one of `--name` or `--epic-id`.
+`--epic-id` takes the full Epic player ID (`Epic|<account ID>|0`); skills and
+club use it directly without an account lookup. `player find` queries
+`GraphQL/AccountQuery` with the account ID from that Epic player ID.
 `playlists active` makes that same naming call (tidy mode only) so its
 entries carry `playlistName` alongside the raw `playlist` index too.
 
@@ -108,6 +112,7 @@ rldump tournament regions                           # list valid regions
 rldump player find --name Z1nky                     # account + linked accounts
 rldump player skills --name Z1nky                   # skill ratings
 rldump player club --name Z1nky                     # club details
+rldump player club --epic-id "Epic|8dd6950d3a2b4a8d964173e775be565b|0"
 rldump playlists all                                # every known playlist
 rldump playlists active                             # currently active playlists
 rldump --raw tournament schedule --region USW       # verbatim API envelope

@@ -115,6 +115,19 @@ public class PlayerFindCommandTests
     }
 
     [Fact]
+    public async Task EpicPlayerId_QueriesAccountById()
+    {
+        using var dir = new TempDir();
+        string configPath = dir.WriteConfig("rldump.json", ConfigJson());
+        var handler = FakeHttpHandler.JsonResponse(Fixtures.Read("accountquery-success.json"));
+
+        await RldumpApp.PlayerFindAsync("Epic|15ca5c7db5b44f9f9a50e3f410a889ef|0", Options(configPath), handler, TestContext.Current.CancellationToken);
+
+        Assert.Single(handler.Requests);
+        Assert.Equal("""{"User":"15ca5c7db5b44f9f9a50e3f410a889ef"}""", handler.Requests[0].Body);
+    }
+
+    [Fact]
     public async Task ErrorEnvelope_Exit1_StderrMessage_NoTokenLeak()
     {
         using var dir = new TempDir();

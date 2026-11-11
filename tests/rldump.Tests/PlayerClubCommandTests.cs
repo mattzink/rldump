@@ -87,6 +87,21 @@ public class PlayerClubCommandTests
       }
 
     [Fact]
+    public async Task EpicPlayerId_SkipsAccountLookup()
+    {
+        using var dir = new TempDir();
+        string configPath = dir.WriteConfig("rldump.json", ConfigJson());
+        var handler = EndpointHandler();
+
+        int code = await RldumpApp.PlayerClubAsync("Epic|" + AccountId + "|0", Options(configPath), handler, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, code);
+        Assert.Single(handler.Requests);
+        Assert.Equal("{\"PlayerID\":\"Epic|" + AccountId + "|0\"}", handler.Requests[0].Body);
+        Assert.Contains("/Clubs/GetPlayerClubDetails", handler.Requests[0].Uri.ToString());
+    }
+
+    [Fact]
     public async Task Raw_PrintsClubEnvelope_Verbatim()
     {
         using var dir = new TempDir();
