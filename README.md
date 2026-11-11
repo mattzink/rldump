@@ -22,6 +22,7 @@ tournament
 player
   find        Resolve a player to their account (--name <NAME>)
   skills      Get a player's skill ratings (--name <NAME>)
+  club        Get a player's club details (--name <NAME>)
 playlists
   all         List every playlist the game knows about
   active      List the playlists currently active on the live servers
@@ -32,6 +33,8 @@ playlists
 `PlayerID "Epic|<account ID>|0"`. Tidy mode makes a third call
 (`Config/GetPlaylists`) to add a `playlistName` alongside each skill's raw
 `playlist` index — `"Unknown"` when the playlist has no title.
+`player club` resolves the name the same way, then queries
+`Clubs/GetPlayerClubDetails` and returns the club details.
 `playlists active` makes that same naming call (tidy mode only) so its
 entries carry `playlistName` alongside the raw `playlist` index too.
 
@@ -104,6 +107,7 @@ rldump tournament schedule --region USW             # tidy JSON to stdout
 rldump tournament regions                           # list valid regions
 rldump player find --name Z1nky                     # account + linked accounts
 rldump player skills --name Z1nky                   # skill ratings
+rldump player club --name Z1nky                     # club details
 rldump playlists all                                # every known playlist
 rldump playlists active                             # currently active playlists
 rldump --raw tournament schedule --region USW       # verbatim API envelope

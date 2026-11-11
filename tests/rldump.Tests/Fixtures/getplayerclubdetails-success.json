@@ -1,0 +1,135 @@
+{
+  "Result": {
+    "ClubDetails": {
+      "ClubID": 156045,
+      "ClubName": "Sons of a Motherless Goat",
+      "ClubTag": "SONS",
+      "PrimaryColor": -52556,
+      "AccentColor": -13435004,
+      "EquippedTitle": "Club_Built_Different",
+      "OwnerPlayerID": "XboxOne|2533274795877317|0",
+      "Members": [
+        {
+          "PlayerID": "XboxOne|2533274795877317|0",
+          "EpicPlayerID": "Epic|31f954741fc743f4be0534728c3df1ab|0",
+          "PlayerName": "Vulpain",
+          "EpicPlayerName": "Vulpa1n",
+          "RoleID": 1,
+          "CreatedTime": 1535645821,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        },
+        {
+          "PlayerID": "Epic|15ca5c7db5b44f9f9a50e3f410a889ef|0",
+          "EpicPlayerID": "Epic|15ca5c7db5b44f9f9a50e3f410a889ef|0",
+          "PlayerName": "Z1nky",
+          "EpicPlayerName": "Z1nky",
+          "RoleID": 2,
+          "CreatedTime": 1535595778,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        },
+        {
+          "PlayerID": "XboxOne|2535448280851746|0",
+          "EpicPlayerID": "Epic|4cc91de368c44d8091bf158171f558cc|0",
+          "PlayerName": "BrautsOfJohnson",
+          "EpicPlayerName": "g0nads",
+          "RoleID": 2,
+          "CreatedTime": 1535662636,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        },
+        {
+          "PlayerID": "XboxOne|2535437282833432|0",
+          "EpicPlayerID": "Epic|2a01690469bf4a47b0f7288b2b7dcd08|0",
+          "PlayerName": "KRAZY604FLIP",
+          "EpicPlayerName": "adoboandriceboi",
+          "RoleID": 0,
+          "CreatedTime": 1535902419,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        },
+        {
+          "PlayerID": "XboxOne|2533274795896500|0",
+          "EpicPlayerID": "Epic|8dd6950d3a2b4a8d964173e775be565b|0",
+          "PlayerName": "DJ Alley P",
+          "EpicPlayerName": "DJ Alley P",
+          "RoleID": 0,
+          "CreatedTime": 1535668030,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        },
+        {
+          "PlayerID": "XboxOne|2535413422461196|0",
+          "EpicPlayerID": "Epic|7e605fbf49fd4fa6b2c538b16d04c825|0",
+          "PlayerName": "thedadGOAT",
+          "EpicPlayerName": "",
+          "RoleID": 0,
+          "CreatedTime": 1579386132,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        },
+        {
+          "PlayerID": "Epic|7ca7499fa5d140139c43e64818022103|0",
+          "EpicPlayerID": "Epic|7ca7499fa5d140139c43e64818022103|0",
+          "PlayerName": "shallowtempo",
+          "EpicPlayerName": "shallowtempo",
+          "RoleID": 0,
+          "CreatedTime": 1604619176,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        },
+        {
+          "PlayerID": "XboxOne|2535463290326672|0",
+          "EpicPlayerID": "Epic|dbe2f947e9f94243aca2a72b20a825fa|0",
+          "PlayerName": "KittyKat6967",
+          "EpicPlayerName": "ScarletSnake18",
+          "RoleID": 0,
+          "CreatedTime": 1722457345,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        },
+        {
+          "PlayerID": "PS4|7753500234637757700|0",
+          "EpicPlayerID": "Epic|d333dbb0533344f8a06b819ea772dd55|0",
+          "PlayerName": "PudgyBuddha",
+          "EpicPlayerName": "Buddhaddy",
+          "RoleID": 0,
+          "CreatedTime": 1733173222,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        },
+        {
+          "PlayerID": "XboxOne|2533274926800023|0",
+          "EpicPlayerID": "Epic|de578eea276340da89916966e9fa1fcc|0",
+          "PlayerName": "Aware Wolf4565",
+          "EpicPlayerName": "",
+          "RoleID": 0,
+          "CreatedTime": 1735418495,
+          "DeletedTime": 0,
+          "PsyonixID": null
+        }
+      ],
+      "Badges": [
+        {
+          "Stat": "Goal",
+          "Badge": 2
+        },
+        {
+          "Stat": "Save",
+          "Badge": 2
+        },
+        {
+          "Stat": "Assist",
+          "Badge": 2
+        }
+      ],
+      "Flags": [],
+      "bVerified": false,
+      "CreatedTime": 1535595778,
+      "LastUpdatedTime": 1792620542,
+      "NameLastUpdatedTime": 1781046633,
+      "DeletedTime": 0
+    }
+  }
+}

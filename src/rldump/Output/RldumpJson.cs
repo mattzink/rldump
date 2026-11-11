@@ -13,6 +13,7 @@ namespace Rldump.Output;
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(ScheduleOutput))]
 [JsonSerializable(typeof(PlayerSkillOutput))]
+[JsonSerializable(typeof(PlayerClubOutput))]
 [JsonSerializable(typeof(ActivePlaylistsOutput))]
 internal sealed partial class OutputJsonContext : JsonSerializerContext
 {
@@ -26,6 +27,9 @@ internal static class JsonSerialize
 
     public static string Skills(PlayerSkillOutput output) =>
         Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(output, OutputJsonContext.Default.PlayerSkillOutput));
+
+    public static string PlayerClub(PlayerClubOutput output) =>
+        Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(output, OutputJsonContext.Default.PlayerClubOutput));
 
     public static string ActivePlaylists(ActivePlaylistsOutput output) =>
         Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(output, OutputJsonContext.Default.ActivePlaylistsOutput));

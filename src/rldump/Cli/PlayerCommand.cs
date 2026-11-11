@@ -4,8 +4,9 @@ namespace Rldump.Cli;
 
 /// <summary>
 /// The "player" command group: look up a player by display name (or Epic
-/// account ID). Subcommands: <c>find</c> (account lookup) and <c>skills</c>
-/// (skill ratings, resolved from the name via the account lookup).
+/// account ID). Subcommands: <c>find</c> (account lookup), <c>skills</c>
+/// (skill ratings), and <c>club</c> (club details), resolved from the name
+/// via the account lookup.
 /// </summary>
 internal static class PlayerCommand
 {
@@ -14,6 +15,7 @@ internal static class PlayerCommand
         var player = new Command("player", "Look up a player by name.");
         player.Add(BuildFind());
         player.Add(BuildSkills());
+        player.Add(BuildClub());
         return player;
     }
 
@@ -35,6 +37,16 @@ internal static class PlayerCommand
         skills.SetAction(async (parseResult, ct) =>
             await RldumpApp.PlayerSkillsAsync(parseResult.GetValue(name)!, parseResult.ToCliOptions(), handler: null, ct));
         return skills;
+    }
+
+    private static Command BuildClub()
+    {
+        Option<string> name = NameOption();
+        var club = new Command("club", "Get a player's club details.");
+        club.Add(name);
+        club.SetAction(async (parseResult, ct) =>
+            await RldumpApp.PlayerClubAsync(parseResult.GetValue(name)!, parseResult.ToCliOptions(), handler: null, ct));
+        return club;
     }
 
     /// <summary>

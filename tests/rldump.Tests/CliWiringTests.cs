@@ -31,6 +31,17 @@ public class CliWiringTests
     }
 
     [Fact]
+    public async Task PlayerClubWithoutName_Exit2_UsageOnStderr()
+    {
+        using var console = new ConsoleCapture();
+
+        int code = await Program.Run(["player", "club"]);
+
+        Assert.Equal(2, code);
+        Assert.Contains("--name", console.StdErr.ToString());
+    }
+
+    [Fact]
     public async Task BareGroupCommand_Exit2_UsageOnStdout()
     {
         using var console = new ConsoleCapture();

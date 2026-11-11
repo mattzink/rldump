@@ -16,6 +16,8 @@ namespace Rldump.Api;
 [JsonSerializable(typeof(AccountQueryRequest))]
 [JsonSerializable(typeof(GetPlayerSkillRequest))]
 [JsonSerializable(typeof(Envelope<GetPlayerSkillResult>))]
+[JsonSerializable(typeof(GetPlayerClubDetailsRequest))]
+[JsonSerializable(typeof(Envelope<GetPlayerClubDetailsResult>))]
 [JsonSerializable(typeof(GetPlaylistsRequest))]
 [JsonSerializable(typeof(Envelope<GetPlaylistsResult>))]
 [JsonSerializable(typeof(GetActivePlaylistsRequest))]

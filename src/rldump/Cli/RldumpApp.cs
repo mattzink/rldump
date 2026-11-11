@@ -124,6 +124,40 @@ internal static class RldumpApp
     }
 
     /// <summary>
+    /// player club: resolve the name to an Epic account ID via
+    /// GraphQL/AccountQuery, then call Clubs/GetPlayerClubDetails with
+    /// PlayerID "Epic|&lt;account ID&gt;|0". Raw mode prints the club endpoint
+    /// envelope verbatim; tidy mode stringifies 64-bit values and camelCases
+    /// the remaining fields.
+    /// </summary>
+    public static async Task<int> PlayerClubAsync(string name, CliOptions options, HttpMessageHandler? handler, CancellationToken ct)
+    {
+        return await Runner.RunAsync(async (client, token) =>
+        {
+            AccountQueryRequest findRequest = new() { User = name };
+            JsonElement account = await client.QueryOpaqueAsync(
+                ApiPaths.AccountQuery, findRequest,
+                ApiJsonContext.Default.AccountQueryRequest, ApiJsonContext.Default.EnvelopeJsonElement, token);
+            string accountId = account.GetProperty("AccountID").GetString()
+                ?? throw new ApiErrorException("MalformedResponse", "the account lookup did not return an AccountID");
+
+            GetPlayerClubDetailsRequest request = new() { PlayerID = $"Epic|{accountId}|0" };
+
+            if (options.Raw)
+            {
+                string body = await client.QueryRawAsync(ApiPaths.GetPlayerClubDetails, request, ApiJsonContext.Default.GetPlayerClubDetailsRequest, token);
+                return JsonFormat.Format(body, options.Compact);
+            }
+
+            GetPlayerClubDetailsResult result = await client.QueryAsync(
+                ApiPaths.GetPlayerClubDetails, request,
+                ApiJsonContext.Default.GetPlayerClubDetailsRequest, ApiJsonContext.Default.EnvelopeGetPlayerClubDetailsResult, token);
+            PlayerClubOutput output = PlayerClubOutputMapper.Map(result);
+            return JsonFormat.Format(JsonSerialize.PlayerClub(output), options.Compact);
+        }, options, handler, ct);
+    }
+
+    /// <summary>
     /// playlists all: Config/GetPlaylists — the full playlist catalog the game
     /// knows about. No field of the Result needs a value transform (small
     /// integer IDs, no timestamps or b-prefixed fields), so tidy mode passes
