@@ -1,6 +1,6 @@
 # rldump
 
-`rldump` is a small .NET 10 Native AOT command-line tool that queries the Rocket
+`rldump` is a small .NET 11 Native AOT command-line tool that queries the Rocket
 League **"Prime"** API (`prime.rocketplanet.gg`) and prints the result as JSON.
 The output is shaped for a **web-page consumer**: IDs that would overflow
 JavaScript's safe-integer range are emitted as strings, timestamps are ISO 8601
@@ -47,7 +47,7 @@ Then copy the included `rldump.json.example` to `rldump.json` and fill in `api.t
 
 ## Build
 
-The toolchain (.NET 10 SDK + the AOT C compiler) is managed by
+The toolchain (.NET 11 SDK + the AOT C compiler) is managed by
 [mise](https://mise.jdx.dev/); the .NET SDK version is pinned in `global.json`,
 which mise picks up. From a fresh clone:
 

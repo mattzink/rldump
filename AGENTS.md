@@ -4,7 +4,7 @@ This file provides guidance to agents when working in this repository.
 
 ## Stack
 
-C# 14 / .NET 10. Two projects:
+C# 15 / .NET 11. Two projects:
 
 - `src/rldump` — a single Native AOT CLI (`rldump`). It queries the Rocket League
   "Prime" API (`prime.rocketplanet.gg`) and prints JSON for a future web-page consumer.
@@ -33,7 +33,7 @@ Run `mise run test` after any code change. The full gate is
 ## Critical Patterns
 
 - **The API's HTTP method is the custom verb `QUERY`** — never "POST". Use the
-  .NET 10 built-in `HttpMethod.Query` static property (not
+  built-in `HttpMethod.Query` static property (not
   `new HttpMethod("QUERY")`). See `RocketPlanetClient`.
 - **Every response is the `{Error | Result}` envelope** — always check `Error`
   first; a non-null `Error` is an `ApiErrorException`. A non-2xx HTTP status is

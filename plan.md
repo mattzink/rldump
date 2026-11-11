@@ -1,6 +1,6 @@
 # rldump — Implementation Plan
 
-A C# / .NET 10 CLI tool that queries the Rocket League "Prime" game API (hosted at
+A C# / .NET 11 CLI tool that queries the Rocket League "Prime" game API (hosted at
 `https://prime.rocketplanet.gg`) and prints the results as JSON. The JSON is intended to be
 loaded into a web page for display (a future, separate project). v1 supports the current
 tournament schedule for a region, plus a `regions` helper command. The tool ships as a
@@ -13,8 +13,8 @@ self-contained **Native AOT** single-file executable. The full toolchain is mana
 
 | Topic | Decision |
 | --- | --- |
-| Language / runtime | C# 14, .NET 10 (`net10.0`), SDK **10.0.403** (pinned in `global.json`; installed by mise) |
-| CLI parsing | **System.CommandLine 2.0.14** (current stable NuGet package; not in the .NET 10 BCL) |
+| Language / runtime | C# 15, .NET 11 (`net11.0`), SDK **11.0.100** (pinned in `global.json`; installed by mise) |
+| CLI parsing | **System.CommandLine 2.0.14** (current stable NuGet package; not in the .NET 11 BCL) |
 | Executable | Native AOT: `<PublishAot>true</PublishAot>` + `<InvariantGlobalization>true</InvariantGlobalization>` → `dist/rldump` |
 | AOT C compiler | **clang 23.1.4** via mise (system only has gcc; keeps the toolchain hermetic) |
 | JSON | `System.Text.Json` with **source-generated** `JsonSerializerContext` only (no reflection — required for AOT) |
@@ -222,7 +222,7 @@ executable test project (per xunit docs, *Microsoft Testing Platform in v3*).
 
 ### 4.3 `src/rldump/rldump.csproj`
 
-A plain `Microsoft.NET.Sdk` `Exe` targeting `net10.0` (assembly `rldump`, namespace
+A plain `Microsoft.NET.Sdk` `Exe` targeting `net11.0` (assembly `rldump`, namespace
 `Rldump`, nullable + implicit usings). The properties that matter:
 `<PublishAot>true</PublishAot>` + `<InvariantGlobalization>true</InvariantGlobalization>`
 (the AOT single-file build, §1); `<Version>1.0.0</Version>` (the CI version base);
@@ -237,7 +237,7 @@ Notes:
   acceptable for a small CLI and surfaces AOT problems early.
 - `InvariantGlobalization` avoids an ICU dependency; we format no culture-specific data.
 - `TreatWarningsAsErrors` catches trim warnings at build time.
-- No `LangVersion` needed — .NET 10 defaults to C# 14.
+- No `LangVersion` needed — .NET 11 defaults to C# 15.
 - `<Version>` is the version base (`1.0.0`): CI keeps major.minor and replaces the
   patch with the GitHub run number via `dotnet publish -p:Version=1.0.<run>` (the
   `mise run publish` task does this when `RLDUMP_VERSION` is set). Locally, `--version`
@@ -257,7 +257,7 @@ Notes:
 ### 4.4 `tests/rldump.Tests/rldump.Tests.csproj`
 
 xunit v3 4.x project shape (per the official 4.0.x template / getting-started docs):
-an `Exe` on `net10.0` that project-references `src/rldump`, with
+an `Exe` on `net11.0` that project-references `src/rldump`, with
 `<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>` and the
 single package `xunit.v3.mtp-v2` 4.0.2.
 
@@ -784,13 +784,13 @@ release action's requirement).
 
 Follow gravwar's structure (Stack / Commands / Critical Patterns / Agent Rules):
 
-- **Stack**: C# 14 / .NET 10 single CLI + xunit v3 (4.x, MTP) test project; toolchain via
+- **Stack**: C# 15 / .NET 11 single CLI + xunit v3 (4.x, MTP) test project; toolchain via
   mise (`clang 23.1.4`; the .NET SDK is pinned in `global.json`).
 - **Commands**: `mise trust && mise install && mise run setup` first time;
   `mise run build|test|publish`.
 - **Critical patterns**:
-  - The API's HTTP method is the custom verb **`QUERY`** — never "POST". Use the .NET 10
-    built-in `HttpMethod.Query` static property (not `new HttpMethod("QUERY")`).
+  - The API's HTTP method is the custom verb **`QUERY`** — never "POST". Use the .NET 10+
+    `HttpMethod.Query` static property (not `new HttpMethod("QUERY")`).
   - Every response is the `{Error|Result}` envelope — always check `Error` first.
   - AOT: System.Text.Json **source generation only** (the two `JsonSerializerContext`s);
     no reflection-based serialization, no `JsonSerializer.Deserialize<T>()` with a
